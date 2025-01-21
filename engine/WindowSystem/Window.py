@@ -1,4 +1,4 @@
-from .WindowInterface import WindowInterface
+from .WindowInterface import WindowInterface, IWindow
 from .WindowContext import WindowContext
 from .WindowManager import WindowManager
 from ..Math import vec2, vec2_ptr_static
@@ -19,6 +19,7 @@ class Window(WindowInterface):
 	__FRAME_RATE: int
 	__RESIZE: bool
 
+	__IWINDOW: IWindow
 	__WINDOW_OBJECT: Optional[window_type]
 
 
@@ -39,12 +40,15 @@ class Window(WindowInterface):
 		self.__FRAME_RATE = frame_rate
 		self.__RESIZE = resize
 
+		self.__IWINDOW = IWindow(self, self.__Tick, self.__ImmediateDestroy)
 		self.__WINDOW_OBJECT = None
-		if(not WindowManager.AppendWindow(self)): return
+
+		if(not WindowManager.AppendWindow(self.__IWINDOW)): return
+
 		self.__WINDOW_OBJECT = CreateWindow(int(self.__SIZE.x), int(self.__SIZE.y), self.__TITLE)
 
 		if self.__WINDOW_OBJECT is None:
-			WindowManager.RemoveWindow(self)
+			WindowManager.RemoveWindow(self.__IWINDOW)
 			return
 		
 		self.__SIZE_OUTPUT.LinkVector(self.__SIZE)
@@ -55,16 +59,20 @@ class Window(WindowInterface):
 
 		self.__EXIST = True
 	
+	def __del__(self) -> None:
+		print("Window deleted")
+	
 	def Destroy(self) -> None:
 		self.__REQUEST_DESTROY = True
 	
-	def ImmediateDestroy(self) -> None:
+	def __ImmediateDestroy(self) -> None:
 		if(self.__EXIST):
-			WindowManager.RemoveWindow(self)
+			WindowManager.RemoveWindow(self.__IWINDOW)
 			WindowContext.SetCurrentWindow(None)
 			DestroyWindow(self.__WINDOW_OBJECT) # type: ignore
 			self.__SIZE_OUTPUT.Unlink()
 			self.__WINDOW_OBJECT = None
+			del self.__IWINDOW
 			self.__EXIST = False
 		self.__REQUEST_DESTROY = False
 
@@ -100,8 +108,8 @@ class Window(WindowInterface):
 		self.__FRAME_RATE = frame_rate
 
 
-	def Tick(self, time: float) -> None:
+	def __Tick(self, time: float) -> None:
 		if(self.__REQUEST_DESTROY or WindowShouldClose(self.__WINDOW_OBJECT)):
-			self.ImmediateDestroy()
+			self.__ImmediateDestroy()
 			return
 		

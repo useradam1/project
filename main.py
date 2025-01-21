@@ -4,8 +4,14 @@ import sys
 
 
 def main() -> int:
-	window = Window(
-		title="3DEngine",
+	Window(
+		title="3DEngine1",
+		size=vec2(800, 600),
+		frame_rate=60,
+		resize=True,
+	)
+	Window(
+		title="3DEngine2",
 		size=vec2(800, 600),
 		frame_rate=60,
 		resize=True,
