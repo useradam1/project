@@ -2,14 +2,14 @@ from abc import ABC, abstractmethod
 from typing import Optional, Callable
 from ..ApiWindow import window_type
 from ..Math import vec2_ptr_static
+from dataclasses import dataclass
+
 
 class WindowInterface(ABC):
 
 	@abstractmethod
 	def Destroy(self) -> None: ...
 
-	@abstractmethod
-	def ImmediateDestroy(self) -> None: ...
 
 
 	@abstractmethod
@@ -38,5 +38,11 @@ class WindowInterface(ABC):
 	def SetFrameRate(self, frame_rate: int) -> None: ...
 
 
-	@abstractmethod
-	def Tick(self, time: float) -> None: ...
+
+
+
+@dataclass(frozen=True)
+class IWindow:
+	window: WindowInterface
+	window_tick: Callable[[float], None]
+	window_destroy: Callable[[], None]
