@@ -1,3 +1,9 @@
 from .Math import *
-from .WindowSystem import *
-from .LoopEngine import *
+from .WindowSystem import Window, WindowInterface
+from .WindowSystem.WindowManager import WindowManager
+from .WindowSystem.WindowContext import WindowContext
+from .LoopEngine import StartEngine
+
+from .UpdateSystem.UpdateSystem import Time
+from .UpdateSystem import UpdateInterface
+from .UpdateSystem import Update

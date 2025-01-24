@@ -1,11 +1,11 @@
-from .WindowInterface import WindowInterface, IWindow
-from .WindowContext import WindowContext
+from .WindowInterface import IWindow
+from .WindowContext import WindowContextSystem
 from ..ApiWindow import ApiWindowInitialization, ApiWindowTerminate, GetCurrentTime, WindowPollEvents
 from typing import List, Set
 
 
 
-class WindowManager:
+class WindowManagerSystem:
 
 	__API_WINDOW_INITIALIZATION: bool = False
 
@@ -13,10 +13,13 @@ class WindowManager:
 	__QUEUE_CHANGE: bool = False
 	__QUEUE_TO_APPEND: Set[IWindow] = set()
 	__QUEUE_TO_REMOVE: Set[IWindow] = set()
-
-	__CAN_UPDATE_WINDOWS: bool = False
 	__WINDOWS: List[IWindow] = []
 
+	__CAN_UPDATE_WINDOWS: bool = False
+
+	@classmethod
+	def GetWindows(cls) -> List[IWindow]:
+		return cls.__WINDOWS
 
 	@classmethod
 	def CanUpdateWindows(cls) -> bool:
@@ -58,20 +61,21 @@ class WindowManager:
 		WindowPollEvents()
 		time = GetCurrentTime()
 		for window in cls.__WINDOWS:
-			WindowContext.SetCurrentWindow(window.window)
-			window.window_tick(time)
+			WindowContextSystem.SetCurrentWindow(window.window)
+			window.tick(time)
 		cls.__WINDOWS.reverse()
 
 
 
 
 	@classmethod
-	def ClearWindows(cls) -> None:
+	def CleaningResources(cls) -> None:
+		cls.__CheckQueueChange()
 		cls.__ENABLE_QUEUE_UPDATES = False
 
 		for window in cls.__WINDOWS:
-			WindowContext.SetCurrentWindow(window.window)
-			window.window_destroy()
+			WindowContextSystem.SetCurrentWindow(window.window)
+			window.destroy()
 		cls.__WINDOWS.clear()
 		cls.__QUEUE_TO_APPEND.clear()
 		cls.__QUEUE_TO_REMOVE.clear()
@@ -83,3 +87,11 @@ class WindowManager:
 		ApiWindowTerminate()
 		cls.__API_WINDOW_INITIALIZATION = False
 		cls.__CAN_UPDATE_WINDOWS = False
+
+
+
+class WindowManager:
+
+	@classmethod
+	def GetWindows(cls) -> List[IWindow]:
+		return WindowManagerSystem.GetWindows()

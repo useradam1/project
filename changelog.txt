@@ -1,1 +1,1 @@
-fixed window termination
+Rework WindowSystem, add UpdateSystem 

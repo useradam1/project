@@ -1,8 +1,8 @@
-from .WindowSystem import WindowManager
+from .WindowSystem import WindowManagerSystem
 
 
 
 def StartEngine() -> None:
-	while WindowManager.CanUpdateWindows():
-		WindowManager.Tick()
-	WindowManager.ClearWindows()
+	while WindowManagerSystem.CanUpdateWindows():
+		WindowManagerSystem.Tick()
+	WindowManagerSystem.CleaningResources()
