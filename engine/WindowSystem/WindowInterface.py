@@ -44,5 +44,5 @@ class WindowInterface(ABC):
 @dataclass(frozen=True)
 class IWindow:
 	window: WindowInterface
-	window_tick: Callable[[float], None]
-	window_destroy: Callable[[], None]
+	tick: Callable[[float], None]
+	destroy: Callable[[], None]
