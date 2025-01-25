@@ -13,17 +13,10 @@ def main() -> int:
 	Window(
 		title="3DEngine1",
 		size=vec2(800, 600),
-		frame_rate=60,
+		frame_rate=0,
 		resize=True,
 	)
 	Update(update1)
-	Window(
-		title="3DEngine2",
-		size=vec2(800, 600),
-		frame_rate=60,
-		resize=True,
-	)
-	Update(update2)
 
 	
 

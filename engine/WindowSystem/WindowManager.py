@@ -59,10 +59,9 @@ class WindowManagerSystem:
 	def Tick(cls) -> None:
 		cls.__CheckQueueChange()
 		WindowPollEvents()
-		time = GetCurrentTime()
 		for window in cls.__WINDOWS:
 			WindowContextSystem.SetCurrentWindow(window.window)
-			window.tick(time)
+			window.tick()
 		cls.__WINDOWS.reverse()
 
 
