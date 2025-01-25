@@ -2,10 +2,11 @@ from ..WindowEvents import WindowInitialization, WindowTerminate, WindowUpdate
 from .WindowInterface import WindowInterface, IWindow
 from .WindowContext import WindowContextSystem
 from .WindowManager import WindowManagerSystem
-from ..Math import vec2, vec2_ptr_static
+from ..Math import vec2, vec2_ptr_static, vec4
 from ..ApiWindow import window_type, CreateWindow, DestroyWindow, SetWindowTitle, SetWindowSize, SetWindowResize, SetSwapInterval
-from ..ApiWindow import WindowShouldClose
+from ..ApiWindow import WindowShouldClose, GetCurrentTime
 from typing import Optional
+from ..Profiler import Profiler
 
 
 class Window(WindowInterface):
@@ -18,6 +19,7 @@ class Window(WindowInterface):
 	__SIZE: vec2
 	__SIZE_OUTPUT: vec2_ptr_static
 	__FRAME_RATE: int
+	__FRAME_RATE_CONTROL: vec4
 	__RESIZE: bool
 
 	__IWINDOW: IWindow
@@ -39,6 +41,8 @@ class Window(WindowInterface):
 		self.__SIZE = size//1
 		self.__SIZE_OUTPUT = vec2_ptr_static()
 		self.__FRAME_RATE = frame_rate
+		self.__FRAME_RATE_CONTROL = vec4()
+		if(frame_rate > 0): self.__FRAME_RATE_CONTROL.x = 1.0/float(frame_rate)
 		self.__RESIZE = resize
 
 		self.__WINDOW_OBJECT = None
@@ -111,11 +115,28 @@ class Window(WindowInterface):
 		return self.__FRAME_RATE
 	def SetFrameRate(self, frame_rate: int) -> None:
 		self.__FRAME_RATE = frame_rate
+		if(frame_rate > 0): self.__FRAME_RATE_CONTROL.x = 1.0/float(frame_rate)
+		else: self.__FRAME_RATE_CONTROL.x = 0.0
 
 
-	def __Tick(self, time: float) -> None:
+	def __Tick(self) -> None:
 		if(self.__REQUEST_DESTROY or WindowShouldClose(self.__WINDOW_OBJECT)):
 			self.__ImmediateDestroy()
 			return
+		time = GetCurrentTime()
+		if(time < self.__FRAME_RATE_CONTROL.w + self.__FRAME_RATE_CONTROL.x): return
+
+
 
 		WindowUpdate(self.__ID, time)
+
+
+
+		self.__FRAME_RATE_CONTROL.y = GetCurrentTime() - self.__FRAME_RATE_CONTROL.w
+		self.__FRAME_RATE_CONTROL.z += self.__FRAME_RATE_CONTROL.y
+
+		if(self.__FRAME_RATE_CONTROL.z > 0.5):
+			SetWindowTitle(self.__WINDOW_OBJECT, f"{self.__TITLE} - {1.0/self.__FRAME_RATE_CONTROL.y:.1f}fps") # type: ignore
+			self.__FRAME_RATE_CONTROL.z = 0
+
+		self.__FRAME_RATE_CONTROL.w = time
