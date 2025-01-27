@@ -23,6 +23,9 @@ class UpdateInterface(ABC):
 	@abstractmethod
 	def SetAction(self, action: Optional[Callable[[], None]]) -> None: ...
 
+	@abstractmethod
+	def HasAction(self) -> bool: ...
+
 	@property
 	def enabled(self) -> bool: ...
 	@enabled.setter

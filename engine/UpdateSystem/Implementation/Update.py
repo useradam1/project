@@ -2,6 +2,9 @@ from ..UpdateInterface import UpdateInterface, IUpdate
 from ..UpdateSystem import UpdateSystem
 from typing import Callable, Optional
 
+
+
+
 class Update(UpdateInterface):
 
 	__ID: int
@@ -9,15 +12,17 @@ class Update(UpdateInterface):
 
 	__ENABLED: bool
 	__ACTION: Optional[Callable[[], None]]
+	__HAS_ACTION: bool
 
 	__IUPDATE: IUpdate
 
-	def __init__(self, action: Callable[[], None]) -> None:
+	def __init__(self, action: Optional[Callable[[], None]]) -> None:
 		self.__ID = id(self)
 		self.__STATUS_EXIST = False
 
 		self.__ENABLED = True
 		self.__ACTION = None
+		self.__HAS_ACTION = False
 
 		self.__IUPDATE = IUpdate( self, self.__Tick, self.Destroy, 0 )
 
@@ -28,6 +33,7 @@ class Update(UpdateInterface):
 
 
 		self.__ACTION = action
+		self.__HAS_ACTION = action is not None
 
 		self.__STATUS_EXIST = True
 
@@ -54,6 +60,10 @@ class Update(UpdateInterface):
 
 	def SetAction(self, action: Optional[Callable[[], None]]) -> None:
 		self.__ACTION = action
+		self.__HAS_ACTION = action is not None
+	
+	def HasAction(self) -> bool:
+		return self.__HAS_ACTION
 
 
 	@property
@@ -65,5 +75,5 @@ class Update(UpdateInterface):
 
 
 	def __Tick(self, delta_time: float) -> None:
-		if(self.__ACTION is not None and self.__ENABLED):
-			self.__ACTION()
+		if(self.__ENABLED and self.__HAS_ACTION):
+			self.__ACTION()	# type: ignore

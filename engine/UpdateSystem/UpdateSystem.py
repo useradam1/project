@@ -9,7 +9,7 @@ zero_float = 0.0
 class UpdateSystem:
 
 	__ENABLE_QUEUE_UPDATES: Dict[int, bool] = {}
-	__QUEUE_CHANGE: Dict[int, bool] = {}
+	__QUEUE_CHANGE: Dict[int, int] = {}
 	__QUEUE_TO_APPEND: Dict[int, Set[IUpdate]] = {}
 	__QUEUE_TO_REMOVE: Dict[int, Set[IUpdate]] = {}
 	__UPDATES: Dict[int, Dict[int, Set[IUpdate]]] = {}
@@ -21,7 +21,7 @@ class UpdateSystem:
 	@classmethod
 	def WindowInitialization(cls, window_id: int) -> None:
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
-		cls.__QUEUE_CHANGE[window_id] = False
+		cls.__QUEUE_CHANGE[window_id] = 0
 		cls.__QUEUE_TO_APPEND[window_id] = set()
 		cls.__QUEUE_TO_REMOVE[window_id] = set()
 		cls.__UPDATES[window_id] = {}
@@ -31,12 +31,12 @@ class UpdateSystem:
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
-		cls.__CheckQueueChange(window_id)
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
+		u = cls.__UPDATES[window_id]
+		cls.__CheckQueueChange(window_id, u)
 
-		for queue in cls.__UPDATES[window_id]:
-			for update in cls.__UPDATES[window_id][queue]:
-				update.destroy()
+		for queue in u:
+			for update in u[queue]: update.destroy()
 
 		cls.__ENABLE_QUEUE_UPDATES.pop(window_id, None)
 		cls.__QUEUE_CHANGE.pop(window_id, None)
@@ -50,66 +50,58 @@ class UpdateSystem:
 
 	@classmethod
 	def AppendUpdate(cls, update: IUpdate) -> bool:
-		window = WindowContextSystem.GetCurrentWindow()
-		if(window is None): return False
+		window_id = WindowContextSystem.GetCurrentWindowId()
+		if(not window_id): return False
 
-		window_id = window.GetId()
-
-		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]):
-			del window, window_id
-			return False
+		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]): return False
 
 		cls.__QUEUE_TO_APPEND[window_id].add(update)
 
-		cls.__QUEUE_CHANGE[window_id] = True
+		cls.__QUEUE_CHANGE[window_id] = 1
 
-		del window, window_id
 		return True
 
 	@classmethod
 	def RemoveUpdate(cls, update: IUpdate) -> None:
-		window = WindowContextSystem.GetCurrentWindow()
-		if(window is None): return
+		window_id = WindowContextSystem.GetCurrentWindowId()
+		if(not window_id): return
 
-		window_id = window.GetId()
-
-		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]):
-			del window, window_id
-			return
+		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]): return
 
 		cls.__QUEUE_TO_REMOVE[window_id].add(update)
 
-		cls.__QUEUE_CHANGE[window_id] = True
-
-		del window, window_id
-		return
+		cls.__QUEUE_CHANGE[window_id] = 1
 
 
 	@classmethod
-	def __CheckQueueChange(cls, window_id: int) -> None:
+	def __CheckQueueChange(cls, window_id: int, u: Dict[int, Set[IUpdate]]) -> None:
 		if(not cls.__QUEUE_CHANGE[window_id]): return
-		cls.__QUEUE_CHANGE[window_id] = False
+		cls.__QUEUE_CHANGE[window_id] = 0
 
-		for update in cls.__QUEUE_TO_APPEND[window_id]:
-			if(update.queue not in cls.__UPDATES[window_id]): cls.__UPDATES[window_id][update.queue] = set()
-			cls.__UPDATES[window_id][update.queue].add(update)
-		cls.__QUEUE_TO_APPEND[window_id].clear()
+		#u = cls.__UPDATES[window_id]
 
-		for update in cls.__QUEUE_TO_REMOVE[window_id]:
-			cls.__UPDATES[window_id][update.queue].remove(update)
-		cls.__QUEUE_TO_REMOVE[window_id].clear()
+		ap = cls.__QUEUE_TO_APPEND[window_id]
+		for update in ap:
+			if(update.queue not in u): u[update.queue] = set()
+			u[update.queue].add(update)
+		ap.clear()
+
+		re = cls.__QUEUE_TO_REMOVE[window_id]
+		for update in re: u[update.queue].remove(update)
+		re.clear()
 
 
 	@classmethod
 	def Tick(cls, window_id: int, time: float) -> None:
-		cls.__CheckQueueChange(window_id)
-
+		dt = time - cls.__TIME[window_id]
+		cls.__DELTA_TIME[window_id] = dt
 		cls.__TIME[window_id] = time
-		cls.__DELTA_TIME[window_id] = time - cls.__TIME[window_id]
 
-		for queue in cls.__UPDATES[window_id]:
-			for update in cls.__UPDATES[window_id][queue]:
-				update.tick(cls.__DELTA_TIME[window_id])
+		u = cls.__UPDATES[window_id]
+		cls.__CheckQueueChange(window_id, u)
+
+		for queue in u:
+			for update in u[queue]: update.tick(dt)
 
 
 	@classmethod
@@ -123,14 +115,10 @@ class UpdateSystem:
 
 class Time:
 
-	@property
-	def time(self) -> float:
-		window = WindowContextSystem.GetCurrentWindow()
-		if(window is None): return zero_float
-		return UpdateSystem.GetTime(window.GetId())
+	@classmethod
+	def GetTime(cls) -> float:
+		return UpdateSystem.GetTime(WindowContextSystem.GetCurrentWindowId())
 
-	@property
-	def delta_time(self) -> float:
-		window = WindowContextSystem.GetCurrentWindow()
-		if(window is None): return zero_float
-		return UpdateSystem.GetDeltaTime(window.GetId())
+	@classmethod
+	def GetDeltaTime(cls) -> float:
+		return UpdateSystem.GetDeltaTime(WindowContextSystem.GetCurrentWindowId())
