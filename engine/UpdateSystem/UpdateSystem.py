@@ -49,10 +49,7 @@ class UpdateSystem:
 
 
 	@classmethod
-	def AppendUpdate(cls, update: IUpdate) -> bool:
-		window_id = WindowContextSystem.GetCurrentWindowId()
-		if(not window_id): return False
-
+	def AppendUpdate(cls, update: IUpdate, window_id: int) -> bool:
 		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]): return False
 
 		cls.__QUEUE_TO_APPEND[window_id].add(update)
@@ -62,10 +59,7 @@ class UpdateSystem:
 		return True
 
 	@classmethod
-	def RemoveUpdate(cls, update: IUpdate) -> None:
-		window_id = WindowContextSystem.GetCurrentWindowId()
-		if(not window_id): return
-
+	def RemoveUpdate(cls, update: IUpdate, window_id: int) -> None:
 		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]): return
 
 		cls.__QUEUE_TO_REMOVE[window_id].add(update)

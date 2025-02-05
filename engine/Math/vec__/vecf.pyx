@@ -4,7 +4,7 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memset
 from libc.math cimport isnan, fabsf, sqrtf, acosf, cosf, sinf, tanf, powf, copysignf, fmodf, floorf
 from ctypes import c_float, Array
-from typing import Optional, Union, List
+from typing import Optional, Union, Set
 from numpy import radians
 
 
@@ -7062,7 +7062,7 @@ cdef class TransformMatrix(mat4):
 cdef class Transform:
 
 	_parent: Optional[Transform]
-	_children: List[Transform]
+	_children: Set[Transform]
 
 	cdef LocalTransformPosition _local_position
 	cdef LocalTransformScale _local_scale
@@ -7120,7 +7120,7 @@ cdef class Transform:
 		self._parent = parent
 		if(self._parent is not None):
 			if(self not in self._parent._children):
-				self._parent._children.append(self)
+				self._parent._children.add(self)
 				TransformUpdateGlobalMatrixSRT(self)
 
 
@@ -7194,7 +7194,7 @@ cdef class Transform:
 
 	def __init__(self, vec3 position, vec3 scale, Rotation rotation):
 		self._parent = None
-		self._children = []
+		self._children = set()
 
 		self._local_position = LocalTransformPosition()
 		self._local_position._transform = self

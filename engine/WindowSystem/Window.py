@@ -9,6 +9,7 @@ from ..ApiWindow import SetCallbackWindowFocus, SetCallbackWindowSize, SetCallba
 from typing import Optional
 from ..Profiler import Profiler
 
+from ..Log import LogColors, PrintLog
 
 class Window(WindowInterface):
 
@@ -57,10 +58,11 @@ class Window(WindowInterface):
 		self.__IN_FOCUS = 0
 
 		self.__WINDOW_OBJECT = None
-		self.__IWINDOW = IWindow(self, self.__Tick, self.__ImmediateDestroy)
+		self.__IWINDOW = IWindow(self.__Tick, self.__ImmediateDestroy)
 
 		if(not WindowManagerSystem.AppendWindow(self.__IWINDOW)):
 			del self.__IWINDOW
+			PrintLog("Window registration denied", color= LogColors.RED)
 			return
 
 		self.__WINDOW_OBJECT = CreateWindow(int(self.__SIZE.x), int(self.__SIZE.y), self.__TITLE)
@@ -68,6 +70,7 @@ class Window(WindowInterface):
 		if self.__WINDOW_OBJECT is None:
 			WindowManagerSystem.RemoveWindow(self.__IWINDOW)
 			del self.__IWINDOW
+			PrintLog("Window critical error", color= LogColors.RED)
 			return
 
 		self.__IN_FOCUS = 1
@@ -83,10 +86,11 @@ class Window(WindowInterface):
 
 		self.__STATUS_EXIST = True
 		WindowInitialization(self.__ID)
-
+		PrintLog("Window Initialization", color= LogColors.GREEN)
 
 	def __del__(self) -> None:
-		print("Window deleted")
+		PrintLog("Window deleted", color= LogColors.BLUE)
+
 
 	def Destroy(self) -> None:
 		self.__REQUEST_DESTROY = 1
@@ -107,6 +111,7 @@ class Window(WindowInterface):
 			self.__WINDOW_OBJECT = None
 			del self.__IWINDOW
 			self.__STATUS_EXIST = False
+			PrintLog("Window Terminate", color= LogColors.YELLOW)
 		self.__REQUEST_DESTROY = 0
 
 
@@ -179,19 +184,19 @@ class Window(WindowInterface):
 
 
 	def __Tick(self) -> None:
-		WindowContextSystem.SetCurrentWindow(self)
 		if(self.__REQUEST_DESTROY or WindowShouldClose(self.__WINDOW_OBJECT)):
 			self.__ImmediateDestroy()
 			return
 		time = GetCurrentTime()
 		if(time < self.__FRAME_RATE_CONTROL.w): return
+		WindowContextSystem.SetCurrentWindow(self)
 
 
 
 		WindowUpdate(self.__ID, time)
 
 
-
+		
 		self.__FRAME_RATE_CONTROL.y = GetCurrentTime() - self.__FRAME_RATE_CONTROL.z
 		self.__TITLE_FPS_ACCUMULATE += self.__FRAME_RATE_CONTROL.y
 
@@ -199,5 +204,6 @@ class Window(WindowInterface):
 			SetWindowTitle(self.__WINDOW_OBJECT, f"{self.__TITLE} - {1.0/self.__FRAME_RATE_CONTROL.y:.1f}fps") # type: ignore
 			self.__TITLE_FPS_ACCUMULATE = 0
 
+		time = GetCurrentTime()
 		self.__FRAME_RATE_CONTROL.z = time
 		self.__FRAME_RATE_CONTROL.w = time + self.__FRAME_RATE_CONTROL.x

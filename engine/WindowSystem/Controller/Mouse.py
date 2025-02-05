@@ -15,9 +15,18 @@ class data:
 		window = WindowContextSystem.GetCurrentWindow().GetWindowObject() # type: ignore
 		SetCallbackMousePosition(window, self.__CallbackPosition) # type: ignore
 		self.__POSITION.x, self.__POSITION.y = GetMousePosition(window) # type: ignore
+		from ...Log import LogColors, PrintLog
+		PrintLog("Mouse Initialization", color= LogColors.GREEN)
+
+	def __del__(self) -> None:
+		from ...Log import LogColors, PrintLog
+		PrintLog("Mouse deleted", color= LogColors.BLUE)
+
 
 	def Destroy(self) -> None:
 		SetCallbackMousePosition(WindowContextSystem.GetCurrentWindow().GetWindowObject(), None) # type: ignore
+		from ...Log import LogColors, PrintLog
+		PrintLog("Mouse Terminate", color= LogColors.YELLOW)
 
 	def __CallbackPosition(self, window: window_type, x: int, y: int) -> None:
 		self.__POSITION.x = x
@@ -38,7 +47,7 @@ class MouseSystem:
 		cls.__DATA[window_id] = data()
 		cls.__POSITION[window_id] = vec2_ptr_static()
 		cls.__POSITION[window_id].LinkVector(cls.__DATA[window_id].GetPosition())
-	
+
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
 		cls.__POSITION[window_id].Unlink()
