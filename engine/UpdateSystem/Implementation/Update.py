@@ -1,7 +1,9 @@
 from ..UpdateInterface import UpdateInterface, IUpdate
 from ..UpdateSystem import UpdateSystem
+from ...WindowSystem import WindowContextSystem
 from typing import Callable, Optional
 
+from ...Log import LogColors, PrintLog
 
 
 
@@ -14,7 +16,9 @@ class Update(UpdateInterface):
 	__ACTION: Optional[Callable[[], None]]
 	__HAS_ACTION: bool
 
+	__WINDOW_ID: int
 	__IUPDATE: IUpdate
+
 
 	def __init__(self, action: Optional[Callable[[], None]]) -> None:
 		self.__ID = id(self)
@@ -24,11 +28,20 @@ class Update(UpdateInterface):
 		self.__ACTION = None
 		self.__HAS_ACTION = False
 
-		self.__IUPDATE = IUpdate( self, self.__Tick, self.Destroy, 0 )
+		self.__WINDOW_ID = WindowContextSystem.GetCurrentWindowId()
+		if(not self.__WINDOW_ID):
+			PrintLog("Update cannot be created outside of the window context", color= LogColors.RED)
+			return
 
+		self.__IUPDATE = IUpdate(
+			tick= self.__Tick, 
+			destroy= self.Destroy, 
+			queue= 0
+		)
 
-		if(not UpdateSystem.AppendUpdate(self.__IUPDATE)):
+		if(not UpdateSystem.AppendUpdate(self.__IUPDATE, self.__WINDOW_ID)):
 			del self.__IUPDATE
+			PrintLog("Update registration denied", color= LogColors.RED)
 			return
 
 
@@ -36,17 +49,20 @@ class Update(UpdateInterface):
 		self.__HAS_ACTION = action is not None
 
 		self.__STATUS_EXIST = True
+		PrintLog("Update Initialization", color= LogColors.GREEN)
 
 	def __del__(self) -> None:
-		print("Update deleted")
+		PrintLog("Update deleted", color= LogColors.BLUE)
 
 
 	def Destroy(self) -> None:
 		if(self.__STATUS_EXIST):
-			UpdateSystem.RemoveUpdate(self.__IUPDATE)
+			UpdateSystem.RemoveUpdate(self.__IUPDATE, self.__WINDOW_ID)
 			del self.__IUPDATE
+			self.__WINDOW_ID = 0
 			self.__ACTION = None
 			self.__STATUS_EXIST = False
+			PrintLog("Update Terminate", color= LogColors.YELLOW)
 
 
 	def GetId(self) -> int:

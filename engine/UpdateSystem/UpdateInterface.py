@@ -35,7 +35,6 @@ class UpdateInterface(ABC):
 
 @dataclass(frozen=True)
 class IUpdate:
-	update: UpdateInterface
 	tick: Callable[[float], None]
 	destroy: Callable[[], None]
 	queue: int

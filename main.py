@@ -1,37 +1,57 @@
 from engine import *
+from Project import *
 import sys
 
 
 def update1() -> None:
-	w = WindowContext.GetCurrentWindow()
-	if(w is None): return
-	center = Mouse.GetPosition() - w.GetSize()*0.5
-	nor = vec2.GetNormalized(center)
-	posw = w.GetPosition()
-	p = posw + nor*2
-	print(center, nor, posw, p)
-	w.SetPosition(int(p.x),int(p.y))
 	pass
 
-def update2() -> None: ...
-	#print("update2")
+def update2() -> None:
+	pass
 
 
 def main() -> int:
 	Window(
 		title="3DEngine1",
 		size=vec2(500, 300),
-		frame_rate=60,
+		frame_rate=0,
 		resize=False,
 	)
 	#for _ in range(1000): Update(update1)
-	Update(update1)
-	# Window(
-	# 	title="3DEngine2",
-	# 	size=vec2(500, 300),
-	# 	frame_rate=0,
-	# 	resize=True,
-	# )
+	Update(update2)
+	GameObject(
+		name= "GameObject1",
+		tag= "0",
+		transform= Transform(
+			vec3( 0 , 0 , 0 ),
+			vec3( 1 , 1 , 1 ),
+			Rotation()
+		),
+		components= [
+			Component()
+		]
+	)
+	#a.Destroy()
+	Window(
+		title="3DEngine2",
+		size=vec2(500, 300),
+		frame_rate=0,
+		resize=True,
+	)
+	GameObject(
+		name= "GameObject2",
+		tag= "0",
+		transform= Transform(
+			vec3( 0 , 0 , 0 ),
+			vec3( 1 , 1 , 1 ),
+			Rotation()
+		),
+		components= [
+			Component()
+		]
+	)
+	# u.Destroy()
+	# del u
 	# Update(update2)
 
 
@@ -40,6 +60,4 @@ def main() -> int:
 	return 0
 
 
-if __name__ == "__main__":
-	output = main()
-	sys.exit(output)
+if __name__ == "__main__": sys.exit(main())

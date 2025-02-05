@@ -1,50 +1,22 @@
+class MyComponent:
+    def __init__(self, parent=None):
+        self.parent = parent
+        if self.parent:
+            self.parent.handle_component_initialization(self)
 
+    def do_something(self):
+        print("MyComponent делает что-то полезное")
 
-def rec(value: int) -> str:
-	if(value>0): return rec(value - 1)
-	return "fin"
+class MyClass:
+    def __init__(self, component):
+        self.component = component
+        self.component.parent = self
 
-from time import time
+    def handle_component_initialization(self, component):
+        print(f"MyClass узнал, что компонент {component} был инициализирован")
+        component.do_something()
 
-
-
-
-#for _ in range(10000): rec(4)
-
-iterations = 100
-
-r = 0
-
-for _ in range(iterations):
-	s = time()
-	for _ in range(100000):
-		if(1):
-			rec(0)
-
-	e = time()
-
-	r = e-s
-
-r /= iterations
-
-print(r)
-
-
-
-
-
-r = 0
-
-for _ in range(iterations):
-	s = time()
-	for _ in range(100000):
-		if(True):
-			rec(0)
-
-	e = time()
-
-	r = e-s
-
-r /= iterations
-
-print(r)
+# Использование
+test = MyClass(
+    component=MyComponent()
+)
