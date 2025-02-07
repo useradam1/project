@@ -56,9 +56,3 @@ class WindowInterface(ABC):
 
 
 
-
-from dataclasses import dataclass
-@dataclass(frozen=True)
-class IWindow:
-	tick: Callable[[], None]
-	destroy: Callable[[], None]
