@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Optional, Set, Type
 from ..Math import Transform
+from .ComponentType import ComponentType
+
 
 
 class GameObjectInterface(ABC):
@@ -36,6 +38,9 @@ class GameObjectInterface(ABC):
 	@abstractmethod
 	def HasParent(self) -> bool: ...
 
+	@abstractmethod
+	def GetComponents(self, component_name: Type[ComponentType]) -> Set[ComponentType]: ...
+
 
 	@property
 	@abstractmethod
@@ -43,12 +48,3 @@ class GameObjectInterface(ABC):
 
 
 
-
-from dataclasses import dataclass
-@dataclass(frozen=True)
-class IGameObject:
-	gameObject: GameObjectInterface
-	id: int
-	getName: Callable[[], str]
-	getTag: Callable[[], str]
-	destroy: Callable[[], None]

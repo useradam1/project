@@ -1,11 +1,16 @@
-from .GameObjectInterface import GameObjectInterface, IGameObject
-from .SceneSystem import SceneManagerSystem
+from .GameObjectInterface import GameObjectInterface
+from .SceneSystem import SceneManagerSystem, IGameObject
+
+from .ComponentInterface import ComponentInterface
+from .ComponentSystem import ComponentManagerSystem
+from .ComponentType import ComponentType
+
 from ..Math import Transform
 from ..Log import LogColors, PrintLog
-from .ComponentInterface import ComponentInterface
 from ..WindowSystem import WindowContextSystem
-from .ComponentSystem import ComponentManagerSystem
-from typing import Optional, List
+
+from typing import Optional, List, Set, Type
+
 
 
 class GameObject(GameObjectInterface):
@@ -107,6 +112,8 @@ class GameObject(GameObjectInterface):
 	def HasParent(self) -> bool:
 		return self.__HAS_PARENT
 
+	def GetComponents(self, component_name: type[ComponentType]) -> Set[ComponentType]:
+		return ComponentManagerSystem.GetComponentsInGameObjectByName(self.__WINDOW_ID, self.__ID, component_name)
 
 	@property
 	def transform(self) -> Transform:

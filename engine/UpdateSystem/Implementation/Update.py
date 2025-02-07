@@ -1,5 +1,4 @@
-from ..UpdateInterface import UpdateInterface, IUpdate
-from ..UpdateSystem import UpdateSystem
+from ..UpdateSystem import UpdateSystem, IUpdate
 from ...WindowSystem import WindowContextSystem
 from typing import Callable, Optional
 
@@ -7,7 +6,7 @@ from ...Log import LogColors, PrintLog
 
 
 
-class Update(UpdateInterface):
+class Update:
 
 	__ID: int
 	__STATUS_EXIST: bool

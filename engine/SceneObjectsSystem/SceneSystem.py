@@ -1,15 +1,28 @@
 from ..WindowSystem import WindowContextSystem
 from .SceneInterface import IScene
-from .GameObjectInterface import GameObjectInterface, IGameObject
-from typing import Dict, Set
+from .GameObjectInterface import GameObjectInterface
+from typing import Dict, Set, Optional, Callable, List
 
 
 emptyset = set()
 
 
+
+from dataclasses import dataclass
+@dataclass(frozen=True)
+class IGameObject:
+	gameObject: GameObjectInterface
+	id: int
+	getName: Callable[[], str]
+	getTag: Callable[[], str]
+	destroy: Callable[[], None]
+
+
 class SceneManagerSystem:
 
+	__ENABLE_QUEUE_UPDATES_SCENES: bool = True
 	__SCENES: Dict[str, IScene] = {}
+	__ACTIVE_SCENE: Dict[int, Optional[IScene]] = {}
 
 
 	__ENABLE_QUEUE_UPDATES: Dict[int, bool] = {}
@@ -17,9 +30,16 @@ class SceneManagerSystem:
 	__GAME_OBJECTS_BY_NAME: Dict[int, Dict[str, Set[GameObjectInterface]]] = {}
 	__GAME_OBJECTS_BY_TAG: Dict[int, Dict[str, Set[GameObjectInterface]]] = {}
 
+	@classmethod
+	def DestroyAllScenes(cls) -> None:
+		cls.__ENABLE_QUEUE_UPDATES_SCENES = False
+		for scene in cls.__SCENES.items(): scene[1].destroy()
+		cls.__SCENES.clear()
+		cls.__ENABLE_QUEUE_UPDATES_SCENES = True
 
 	@classmethod
 	def WindowInitialization(cls, window_id: int) -> None:
+		cls.__ACTIVE_SCENE[window_id] = None
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
 		cls.__IGAME_OBJECTS[window_id] = set()
 		cls.__GAME_OBJECTS_BY_NAME[window_id] = {}
@@ -27,6 +47,11 @@ class SceneManagerSystem:
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
+		scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(scene is not None):
+			scene.unload()
+			cls.__ACTIVE_SCENE[window_id] = None
+
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
 		for gameObject in cls.__IGAME_OBJECTS[window_id]:
 			gameObject.destroy()
@@ -35,15 +60,53 @@ class SceneManagerSystem:
 		cls.__IGAME_OBJECTS.pop(window_id, None)
 		cls.__GAME_OBJECTS_BY_NAME.pop(window_id, None)
 		cls.__GAME_OBJECTS_BY_TAG.pop(window_id, None)
+		cls.__ACTIVE_SCENE.pop(window_id, None)
+
+
+	@classmethod
+	def GetActiveScene(cls, window_id: int) -> str:
+		scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(scene is None): return ""
+		return scene.name
+
+
+	@classmethod
+	def GetScenes(cls) -> List[str]:
+		return [scene for scene in cls.__SCENES]
+
+
+	@classmethod
+	def RunScene(cls, window_id: int, name_scene: str) -> None:
+		scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(scene is not None):
+			scene.unload()
+			cls.__ACTIVE_SCENE[window_id] = None
+
+		scene = cls.__SCENES.get(name_scene, None)
+		if(scene is None): return
+
+		scene.load()
+		scene.start()
+		cls.__ACTIVE_SCENE[window_id] = scene
+
+	@classmethod
+	def EndScene(cls, window_id: int) -> None:
+		scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(scene is not None):
+			scene.unload()
+			cls.__ACTIVE_SCENE[window_id] = None
+
 
 
 	@classmethod
 	def AppendScene(cls, scene: IScene) -> bool:
+		if(not cls.__ENABLE_QUEUE_UPDATES_SCENES): return False
 		cls.__SCENES[scene.name] = scene
 		return True
 
 	@classmethod
 	def RemoveScene(cls, scene: IScene) -> None:
+		if(not cls.__ENABLE_QUEUE_UPDATES_SCENES): return
 		cls.__SCENES.pop(scene.name, None)
 
 
@@ -130,3 +193,19 @@ class SceneManager:
 		window_id = WindowContextSystem.GetCurrentWindowId()
 		if(not window_id): return emptyset
 		return SceneManagerSystem.GetGameObjectsByTag(tag, window_id)
+
+	@classmethod
+	def RunScene(cls, name_scene: str) -> None:
+		SceneManagerSystem.RunScene(WindowContextSystem.GetCurrentWindowId(), name_scene)
+
+	@classmethod
+	def EndScene(cls) -> None:
+		SceneManagerSystem.EndScene(WindowContextSystem.GetCurrentWindowId())
+
+	@classmethod
+	def GetScenes(cls) -> List[str]:
+		return SceneManagerSystem.GetScenes()
+
+	@classmethod
+	def GetActiveScene(cls) -> str:
+		return SceneManagerSystem.GetActiveScene(WindowContextSystem.GetCurrentWindowId())

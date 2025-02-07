@@ -1,10 +1,27 @@
-from .ComponentInterface import ComponentInterface, IComponent
+from .ComponentType import ComponentType
+from .ComponentInterface import ComponentInterface
+from .SceneSystem import IGameObject
+
 from ..WindowSystem import WindowContextSystem
-from .GameObjectInterface import IGameObject
-from typing import Dict, Set
+
+from typing import Dict, Set, Type, Callable
 
 
 emptyset = set()
+
+emptydict = {}
+
+
+
+from dataclasses import dataclass
+@dataclass(frozen=True)
+class IComponent:
+	component: ComponentInterface
+	id: int
+	name: str
+	initialization: Callable[[IGameObject], None]
+	getGameObjectId: Callable[[], int]
+	destroy: Callable[[], int]
 
 
 class ComponentManagerSystem:
@@ -127,9 +144,32 @@ class ComponentManagerSystem:
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
 
 
+	@classmethod
+	def GetComponentsInGameObjectByName(cls, window_id: int, gameObject_id: int, component_name: Type[ComponentType]) -> Set[ComponentType]:
+		return cls.__COMPONENTS_IN_GAME_OBJECT_BY_NAME[window_id].get(gameObject_id, emptydict).get(component_name.__name__, emptyset) #type: ignore
+
+
+	@classmethod
+	def GetComponentsInGameObject(cls, window_id: int, gameObject_id: int) -> Set[ComponentInterface]:
+		return cls.__COMPONENTS_IN_GAME_OBJECT[window_id].get(gameObject_id, emptyset)
+	
+
+	@classmethod
+	def GetComponentsByName(cls, window_id: int, component_name: Type[ComponentType]) -> Set[ComponentType]:
+		return cls.__COMPONENTS_BY_NAME[window_id].get(component_name.__name__, emptyset) #type: ignore
 
 
 
 class ComponentManager:
 
-	pass
+	@classmethod
+	def GetComponentsByName(cls, component_name: Type[ComponentType]) -> Set[ComponentType]:
+		return ComponentManagerSystem.GetComponentsByName(WindowContextSystem.GetCurrentWindowId(), component_name)
+
+	@classmethod
+	def GetComponentsInGameObject(cls, gameObject_id: int) -> Set[ComponentInterface]:
+		return ComponentManagerSystem.GetComponentsInGameObject(WindowContextSystem.GetCurrentWindowId(), gameObject_id)
+
+	@classmethod
+	def GetComponentsInGameObjectByName(cls, gameObject_id: int, component_name: Type[ComponentType]) -> Set[ComponentType]:
+		return ComponentManagerSystem.GetComponentsInGameObjectByName(WindowContextSystem.GetCurrentWindowId(), gameObject_id, component_name)
