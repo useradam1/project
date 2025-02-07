@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Optional, Callable
 from ..ApiWindow import window_type
 from ..Math import vec2
-from dataclasses import dataclass
 
 
 class WindowInterface(ABC):
@@ -58,6 +57,7 @@ class WindowInterface(ABC):
 
 
 
+from dataclasses import dataclass
 @dataclass(frozen=True)
 class IWindow:
 	tick: Callable[[], None]

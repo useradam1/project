@@ -85,8 +85,8 @@ class Window(WindowInterface):
 		SetCallbackWindowPosition(self.__WINDOW_OBJECT, self.__CallbackPosition)
 
 		self.__STATUS_EXIST = True
-		WindowInitialization(self.__ID)
 		PrintLog("Window Initialization", color= LogColors.GREEN)
+		WindowInitialization(self.__ID)
 
 	def __del__(self) -> None:
 		PrintLog("Window deleted", color= LogColors.BLUE)
@@ -100,10 +100,10 @@ class Window(WindowInterface):
 			push_context_window = WindowContextSystem.GetCurrentWindow()
 			WindowContextSystem.SetCurrentWindow(self)
 			WindowTerminate(self.__ID)
-			WindowManagerSystem.RemoveWindow(self.__IWINDOW)
 			SetCallbackWindowSize(self.__WINDOW_OBJECT, None) # type: ignore
 			SetCallbackWindowFocus(self.__WINDOW_OBJECT, None) # type: ignore
 			SetCallbackWindowPosition(self.__WINDOW_OBJECT, None) # type: ignore
+			WindowManagerSystem.RemoveWindow(self.__IWINDOW)
 			WindowContextSystem.SetCurrentWindow(push_context_window)
 			DestroyWindow(self.__WINDOW_OBJECT) # type: ignore
 			self.__SIZE_OUTPUT.Unlink()

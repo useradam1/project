@@ -6,8 +6,7 @@ from .LoopEngine import StartEngine
 
 
 from .UpdateSystem.UpdateSystem import Time
-from .UpdateSystem import UpdateInterface
 from .UpdateSystem import Update
 
 
-from .SceneObjectsSystem import SceneManager, Scene, GameObject, Component
+from .SceneObjectsSystem import SceneManager, Scene, GameObject, ComponentManager, Component

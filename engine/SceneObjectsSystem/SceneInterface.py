@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Callable
-from dataclasses import dataclass
 
 class SceneInterface(ABC):
 
@@ -15,6 +14,9 @@ class SceneInterface(ABC):
 	def GetStatusExist(self) -> bool: ...
 
 	@abstractmethod
+	def GetName(self) -> str: ...
+
+	@abstractmethod
 	def Load(self) -> None: ...
 	@abstractmethod
 	def Start(self) -> None: ...
@@ -22,6 +24,7 @@ class SceneInterface(ABC):
 	def Unload(self) -> None: ...
 
 
+from dataclasses import dataclass
 @dataclass(frozen=True)
 class IScene:
 	name: str

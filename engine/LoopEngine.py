@@ -1,4 +1,5 @@
 from .WindowSystem import WindowManagerSystem
+from .SceneObjectsSystem import SceneManagerSystem
 from .Profiler import Profiler
 
 PROFILER_UPDATE = 0
@@ -16,4 +17,5 @@ def StartEngine() -> None:
 		WindowManagerSystem.Tick()
 		#showDiagram()
 	WindowManagerSystem.CleaningResources()
+	SceneManagerSystem.DestroyAllScenes()
 	#Profiler.ProfilerOff()

@@ -1,10 +1,14 @@
-from .ComponentInterface import ComponentInterface, IComponent
-from .GameObjectInterface import GameObjectInterface, IGameObject
-from .ComponentSystem import ComponentManagerSystem
+from .ComponentInterface import ComponentInterface
+from .GameObjectInterface import GameObjectInterface
+from .SceneSystem import IGameObject
+from .ComponentSystem import ComponentManagerSystem, IComponent
+
 from ..Log import LogColors, PrintLog
 from ..CustomMetaclass import Protected
 from ..Math import Transform
 from ..WindowSystem import WindowContextSystem
+
+
 
 
 class Component(ComponentInterface):
@@ -104,3 +108,4 @@ class Component(ComponentInterface):
 	@property
 	def transform(self) -> Transform:
 		return self.__TRANSFORM
+

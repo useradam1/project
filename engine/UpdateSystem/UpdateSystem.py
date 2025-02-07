@@ -1,10 +1,15 @@
-from typing import Set, Dict
-from .UpdateInterface import IUpdate
+from typing import Set, Dict, Callable
 from ..WindowSystem import WindowContextSystem
 
 
 zero_float = 0.0
 
+from dataclasses import dataclass
+@dataclass(frozen=True)
+class IUpdate:
+	tick: Callable[[float], None]
+	destroy: Callable[[], None]
+	queue: int
 
 class UpdateSystem:
 
