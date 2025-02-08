@@ -1,7 +1,7 @@
 from ..WindowEvents import WindowInitialization, WindowTerminate, WindowUpdate
-from .WindowInterface import WindowInterface, IWindow
+from .WindowInterface import WindowInterface
 from .WindowContext import WindowContextSystem
-from .WindowManager import WindowManagerSystem
+from .WindowManager import WindowManagerSystem, IWindow
 from ..Math import vec2, vec2_ptr_static, vec4
 from ..ApiWindow import window_type, CreateWindow, DestroyWindow, WindowShouldClose, GetCurrentTime, GetWindowPosition
 from ..ApiWindow import SetWindowTitle, SetSwapInterval, SetWindowPosition, SetWindowResize, SetWindowSize
@@ -59,6 +59,9 @@ class Window(WindowInterface):
 
 		self.__WINDOW_OBJECT = None
 		self.__IWINDOW = IWindow(self.__Tick, self.__ImmediateDestroy)
+		# self.__IWINDOW = IWindow()
+		# self.__IWINDOW.tick = self.__Tick
+		# self.__IWINDOW.destroy = self.__ImmediateDestroy
 
 		if(not WindowManagerSystem.AppendWindow(self.__IWINDOW)):
 			del self.__IWINDOW

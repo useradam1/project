@@ -3,6 +3,7 @@ from Project import *
 import sys
 
 
+def upd1(): ...
 
 
 def main() -> int:
@@ -12,7 +13,8 @@ def main() -> int:
 		frame_rate=0,
 		resize=False,
 	)
-	SceneManager.RunScene("MainScene")
+	#for _ in range(1000): Update(upd1)
+	#SceneManager.RunScene("MainScene")
 
 
 

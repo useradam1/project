@@ -1,9 +1,13 @@
-from .WindowInterface import IWindow
 from .WindowContext import WindowContextSystem
 from ..ApiWindow import ApiWindowInitialization, ApiWindowTerminate, GetCurrentTime, WindowPollEvents
-from typing import List, Set
+from typing import List, Set, Callable
 
 
+from dataclasses import dataclass
+@dataclass(frozen=True)
+class IWindow:
+	tick: Callable[[], None]
+	destroy: Callable[[], None]
 
 class WindowManagerSystem:
 

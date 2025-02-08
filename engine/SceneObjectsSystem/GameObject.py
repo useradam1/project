@@ -112,7 +112,7 @@ class GameObject(GameObjectInterface):
 	def HasParent(self) -> bool:
 		return self.__HAS_PARENT
 
-	def GetComponents(self, component_name: type[ComponentType]) -> Set[ComponentType]:
+	def GetComponents(self, component_name: Type[ComponentType]) -> Set[ComponentType]:
 		return ComponentManagerSystem.GetComponentsInGameObjectByName(self.__WINDOW_ID, self.__ID, component_name)
 
 	@property

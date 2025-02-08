@@ -32,11 +32,10 @@ class Update:
 			PrintLog("Update cannot be created outside of the window context", color= LogColors.RED)
 			return
 
-		self.__IUPDATE = IUpdate(
-			tick= self.__Tick, 
-			destroy= self.Destroy, 
-			queue= 0
-		)
+		self.__IUPDATE = IUpdate()
+		self.__IUPDATE.tick = self.__Tick
+		self.__IUPDATE.destroy = self.Destroy
+		self.__IUPDATE.queue = 0
 
 		if(not UpdateSystem.AppendUpdate(self.__IUPDATE, self.__WINDOW_ID)):
 			del self.__IUPDATE
