@@ -1,5 +1,3 @@
-from ..WindowSystem import WindowContextSystem
-from .SceneInterface import IScene
 from .GameObjectInterface import GameObjectInterface
 from typing import Dict, Set, Optional, Callable, List
 
@@ -9,6 +7,7 @@ emptyset = set()
 
 
 from dataclasses import dataclass
+
 @dataclass(frozen=True)
 class IGameObject:
 	gameObject: GameObjectInterface
@@ -16,6 +15,14 @@ class IGameObject:
 	getName: Callable[[], str]
 	getTag: Callable[[], str]
 	destroy: Callable[[], None]
+
+@dataclass(frozen=True)
+class IScene:
+	name: str
+	load: Callable[[],None]
+	start: Callable[[],None]
+	unload: Callable[[],None]
+	destroy: Callable[[],None]
 
 
 class SceneManagerSystem:
@@ -44,6 +51,20 @@ class SceneManagerSystem:
 		cls.__IGAME_OBJECTS[window_id] = set()
 		cls.__GAME_OBJECTS_BY_NAME[window_id] = {}
 		cls.__GAME_OBJECTS_BY_TAG[window_id] = {}
+
+	@classmethod
+	def WindowFlush(cls, window_id: int) -> None:
+		scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(scene is not None):
+			scene.unload()
+			cls.__ACTIVE_SCENE[window_id] = None
+
+		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
+		go = cls.__IGAME_OBJECTS[window_id]
+		for gameObject in go:
+			gameObject.destroy()
+		go.clear()
+		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
@@ -179,33 +200,3 @@ class SceneManagerSystem:
 		if(window_id not in cls.__GAME_OBJECTS_BY_TAG): return emptyset
 		return cls.__GAME_OBJECTS_BY_TAG[window_id].get(tag, emptyset)
 
-
-
-class SceneManager:
-
-	@classmethod
-	def GetGameObjectsByName(cls, name: str) -> set:
-		window_id = WindowContextSystem.GetCurrentWindowId()
-		if(not window_id): return emptyset
-		return SceneManagerSystem.GetGameObjectsByName(name, window_id)
-	@classmethod
-	def GetGameObjectsByTag(cls, tag: str) -> set:
-		window_id = WindowContextSystem.GetCurrentWindowId()
-		if(not window_id): return emptyset
-		return SceneManagerSystem.GetGameObjectsByTag(tag, window_id)
-
-	@classmethod
-	def RunScene(cls, name_scene: str) -> None:
-		SceneManagerSystem.RunScene(WindowContextSystem.GetCurrentWindowId(), name_scene)
-
-	@classmethod
-	def EndScene(cls) -> None:
-		SceneManagerSystem.EndScene(WindowContextSystem.GetCurrentWindowId())
-
-	@classmethod
-	def GetScenes(cls) -> List[str]:
-		return SceneManagerSystem.GetScenes()
-
-	@classmethod
-	def GetActiveScene(cls) -> str:
-		return SceneManagerSystem.GetActiveScene(WindowContextSystem.GetCurrentWindowId())

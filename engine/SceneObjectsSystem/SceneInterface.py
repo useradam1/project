@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Callable
 
+
 class SceneInterface(ABC):
 
 	@abstractmethod
@@ -23,12 +24,3 @@ class SceneInterface(ABC):
 	@abstractmethod
 	def Unload(self) -> None: ...
 
-
-from dataclasses import dataclass
-@dataclass(frozen=True)
-class IScene:
-	name: str
-	load: Callable[[],None]
-	start: Callable[[],None]
-	unload: Callable[[],None]
-	destroy: Callable[[],None]

@@ -89,9 +89,3 @@ class WindowManagerSystem:
 		cls.__CAN_UPDATE_WINDOWS = 1
 
 
-
-class WindowManager:
-
-	@classmethod
-	def GetWindows(cls) -> List[IWindow]:
-		return WindowManagerSystem.GetWindows()

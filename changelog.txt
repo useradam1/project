@@ -1,1 +1,1 @@
- 
+added alignment with the diagram, minor fixes related to the SceneObjectsSystem

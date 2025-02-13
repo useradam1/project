@@ -66,6 +66,7 @@ class Component(ComponentInterface):
 		self.__TRANSFORM = gameObject.gameObject.transform
 		self.__STATUS_EXIST = True
 		PrintLog(f"{self.__class__.__name__} new parent has been assigned", color= LogColors.GREEN)
+		self.__OnStart()
 
 
 	def __del__(self) -> None:
@@ -86,7 +87,9 @@ class Component(ComponentInterface):
 			self.__AWAKE = False
 			PrintLog(f"{self.__class__.__name__} Terminate", color= LogColors.YELLOW)
 		return self.__ID
-	
+
+
+	def __OnStart(self) -> None: ...
 
 	def __OnDestroy(self) -> None: ...
 
