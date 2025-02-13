@@ -1,12 +1,11 @@
 from .Math import *
-from .WindowSystem import Window, WindowInterface, Mouse
-from .WindowSystem.WindowManager import WindowManager
-from .WindowSystem.WindowContext import WindowContext
+
+from .WindowSystem import WindowInterface, WindowContext, Window, Mouse
 from .LoopEngine import StartEngine
 
 
-from .UpdateSystem.UpdateSystem import Time
-from .UpdateSystem import Update
+from .UpdateSystem import Update, Time
 
 
-from .SceneObjectsSystem import SceneManager, Scene, GameObject, ComponentManager, Component
+from .SceneObjectsSystem import Scene, GameObject, ComponentManager, Component
+from .SceneObjectsSystem.SceneManager import SceneManager

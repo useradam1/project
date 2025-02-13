@@ -23,8 +23,15 @@ def tan(float value) -> float:
 cdef inline float funtan(float value):
 	return tanf(value)
 
+def clamp(int value, int min_value, int max_value) -> int:
+	return funclamp_int(value, min_value, max_value)
 
-
+cdef inline int funclamp_int(int value, int min_value, int max_value):
+	if value < min_value:
+		return min_value
+	elif value > max_value:
+		return max_value
+	return value
 
 cdef float c_zero_float = 0.0
 cdef float c_neg_one_float = -1.0
@@ -90,11 +97,13 @@ cdef class vec2_ptr_static(vec2):
 	def sqrMagnitude(self) -> float:
 		return vec2_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> vec2:
 		print("Not allowed")
+		return self
 
-	def NormalizeFrom(self, vec2 value) -> None:
+	def NormalizeFrom(self, vec2 value) -> vec2:
 		print("Not allowed")
+		return self
 
 	@staticmethod
 	def GetNormalized(vec2 value) -> vec2:
@@ -351,13 +360,15 @@ cdef class vec2:
 	def sqrMagnitude(self) -> float:
 		return vec2_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> vec2:
 		vec2_normalize_in_place(self._global_data_ptr, self._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
-	def NormalizeFrom(self, vec2 value) -> None:
+	def NormalizeFrom(self, vec2 value) -> vec2:
 		vec2_normalize_from(self._global_data_ptr, self._global_magnitude_ptr, value._global_data_ptr, (<vec2>value)._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
 	@staticmethod
 	def GetNormalized(vec2 value) -> vec2:
@@ -843,22 +854,26 @@ cdef class mat2:
 	def determinant(self) -> float:
 		return mat2_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> None:
+	def Inverse(self) -> mat2:
 		mat2_inverse_in_place(self._global_data_ptr, self._global_determinant_ptr)
-	def InverseFrom(self, mat2 value) -> None:
+		return self
+	def InverseFrom(self, mat2 value) -> mat2:
 		mat2_inverse_from(self._global_data_ptr, self._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
+		return self
 	@staticmethod
 	def GetInverse(mat2 value) -> mat2:
 		cdef mat2 result = mat2()
 		mat2_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> None:
+	def Transpose(self) -> mat2:
 		mat2_transpose_in_place(self._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
-	def TransposeFrom(self, mat2 value) -> None:
+		return self
+	def TransposeFrom(self, mat2 value) -> mat2:
 		mat2_transpose_from(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 	@staticmethod
 	def GetTransposed(mat2 value) -> mat2:
 		cdef mat2 result = mat2()
@@ -1390,13 +1405,15 @@ cdef class vec3:
 	def sqrMagnitude(self) -> float:
 		return vec3_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> vec3:
 		vec3_normalize_in_place(self._global_data_ptr, self._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
-	def NormalizeFrom(self, vec3 value) -> None:
+	def NormalizeFrom(self, vec3 value) -> vec3:
 		vec3_normalize_from(self._global_data_ptr, self._global_magnitude_ptr, value._global_data_ptr, (<vec3>value)._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
 	@staticmethod
 	def GetNormalized(vec3 value) -> vec3:
@@ -1408,13 +1425,15 @@ cdef class vec3:
 	def GetDotProduct(vec3 valueA, vec3 valueB) -> float:
 		return vec3_dot_product_vec3(valueA._global_data_ptr, valueB._global_data_ptr)
 
-	def CrossProduct(self, vec3 value) -> None:
+	def CrossProduct(self, vec3 value) -> vec3:
 		vec3_cross_product_in_place(self._global_data_ptr, value._global_data_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
-	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> None:
+	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> vec3:
 		vec3_cross_product_from(self._global_data_ptr, valueA._global_data_ptr, valueB._global_data_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
 	@staticmethod
 	def GetCrossProduct(vec3 valueA, vec3 valueB) -> vec3:
@@ -1927,22 +1946,26 @@ cdef class mat3:
 	def determinant(self) -> float:
 		return mat3_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> None:
+	def Inverse(self) -> mat3:
 		mat3_inverse_in_place(self._global_data_ptr, self._global_determinant_ptr)
-	def InverseFrom(self, mat3 value) -> None:
+		return self
+	def InverseFrom(self, mat3 value) -> mat3:
 		mat3_inverse_from(self._global_data_ptr, self._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
+		return self
 	@staticmethod
 	def GetInverse(mat3 value) -> mat3:
 		cdef mat3 result = mat3()
 		mat3_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> None:
+	def Transpose(self) -> mat3:
 		mat3_transpose_in_place(self._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
-	def TransposeFrom(self, mat3 value) -> None:
+		return self
+	def TransposeFrom(self, mat3 value) -> mat3:
 		mat3_transpose_from(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 	@staticmethod
 	def GetTransposed(mat3 value) -> mat3:
 		cdef mat3 result = mat3()
@@ -2527,22 +2550,26 @@ cdef class Rotation(mat3):
 	def determinant(self) -> float:
 		return mat3_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> None:
+	def Inverse(self) -> Rotation:
 		mat3_inverse_in_place(self._global_data_ptr, self._global_determinant_ptr)
-	def InverseFrom(self, mat3 value) -> None:
+		return self
+	def InverseFrom(self, mat3 value) -> Rotation:
 		mat3_inverse_from(self._global_data_ptr, self._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
+		return self
 	@staticmethod
 	def GetInverse(mat3 value) -> Rotation:
 		cdef Rotation result = Rotation()
 		mat3_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> None:
+	def Transpose(self) -> Rotation:
 		mat3_transpose_in_place(self._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
-	def TransposeFrom(self, mat3 value) -> None:
+		return self
+	def TransposeFrom(self, mat3 value) -> Rotation:
 		mat3_transpose_from(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 	@staticmethod
 	def GetTransposed(mat3 value) -> Rotation:
 		cdef Rotation result = Rotation()
@@ -2909,13 +2936,15 @@ cdef class vec4:
 	def sqrMagnitude(self) -> float:
 		return vec4_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> vec4:
 		vec4_normalize_in_place(self._global_data_ptr, self._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
-	def NormalizeFrom(self, vec4 value) -> None:
+	def NormalizeFrom(self, vec4 value) -> vec4:
 		vec4_normalize_from(self._global_data_ptr, self._global_magnitude_ptr, value._global_data_ptr, (<vec4>value)._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
 	@staticmethod
 	def GetNormalized(vec4 value) -> vec4:
@@ -3445,22 +3474,26 @@ cdef class mat4:
 	def determinant(self) -> float:
 		return mat4_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> None:
+	def Inverse(self) -> mat4:
 		mat4_inverse_in_place(self._global_data_ptr, self._global_determinant_ptr)
-	def InverseFrom(self, mat4 value) -> None:
+		return self
+	def InverseFrom(self, mat4 value) -> mat4:
 		mat4_inverse_from(self._global_data_ptr, self._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
+		return self
 	@staticmethod
 	def GetInverse(mat4 value) -> mat4:
 		cdef mat4 result = mat4()
 		mat4_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> None:
+	def Transpose(self) -> mat4:
 		mat4_transpose_in_place(self._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
-	def TransposeFrom(self, mat4 value) -> None:
+		return self
+	def TransposeFrom(self, mat4 value) -> mat4:
 		mat4_transpose_from(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 	@staticmethod
 	def GetTransposed(mat4 value) -> mat4:
 		cdef mat4 result = mat4()
@@ -4043,345 +4076,6 @@ cdef inline void mat4_matmul_vec4(float* target_vector[4], float* matrix[16], fl
 
 
 
-cdef class vec3_ptr(vec3):
-
-	#cdef float[3] _global_data
-	#cdef float _global_magnitude
-	#cdef float _global_sqrMagnitude
-
-	#cdef float* _global_data_ptr[3]
-	#cdef float* _global_magnitude_ptr
-	#cdef float* _global_sqrMagnitude_ptr
-
-	def LinkVector(self, vec3 vector) -> None:
-		for i in range(3): self._global_data_ptr[i] = vector._global_data_ptr[i]
-		self._global_magnitude_ptr = vector._global_magnitude_ptr
-		self._global_sqrMagnitude_ptr = vector._global_sqrMagnitude_ptr
-
-	def LinkMatrix(self, mat3 matrix, int basis) -> None:
-		for i in range(3): self._global_data_ptr[i] = matrix._global_data_ptr[basis * 3 + i]
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	def Unlink(self) -> None:
-		for i in range(3): self._global_data_ptr[i] = &self._global_data[i]
-		self._global_magnitude_ptr = &self._global_magnitude
-		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	def __repr__(self) -> str:
-		return f"vec3({self._global_data_ptr[0][0]:.2f}, {self._global_data_ptr[1][0]:.2f}, {self._global_data_ptr[2][0]:.2f})"
-
-	def __len__(self) -> int:
-		return 3
-
-	def __getitem__(self, int index) -> float:
-		return self._global_data_ptr[index][0]
-	def __setitem__(self, int index, float value) -> None:
-		self._global_data_ptr[index][0] = value
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	@property
-	def x(self) -> float:
-		return self._global_data_ptr[0][0]
-	@x.setter
-	def x(self, float value) -> None:
-		self._global_data_ptr[0][0] = value
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	@property
-	def y(self) -> float:
-		return self._global_data_ptr[1][0]
-	@y.setter
-	def y(self, float value) -> None:
-		self._global_data_ptr[1][0] = value
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	@property
-	def z(self) -> float:
-		return self._global_data_ptr[2][0]
-	@z.setter
-	def z(self, float value) -> None:
-		self._global_data_ptr[2][0] = value
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-
-	def __init__(self, float x = c_zero_float, float y = c_zero_float, float z = c_zero_float) -> None:
-		self._global_data[0] = x
-		self._global_data[1] = y
-		self._global_data[2] = z
-		self._global_magnitude = c_neg_one_float
-		self._global_sqrMagnitude = c_neg_one_float
-
-		for i in range(3): self._global_data_ptr[i] = &self._global_data[i]
-		self._global_magnitude_ptr = &self._global_magnitude
-		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
-
-
-	def CreateCType(self) -> Array[c_float]:
-		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
-
-
-	def SetValues(self, float x, float y, float z) -> None:
-		self._global_data[0] = x
-		self._global_data[1] = y
-		self._global_data[2] = z
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	def SetVector(self, vec3 value) -> None:
-		vec3_set_vec3(self._global_data_ptr, value._global_data_ptr)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-
-	@property
-	def magnitude(self) -> float:
-		return vec3_magnitude(self._global_data_ptr, self._global_magnitude_ptr)
-
-	@property
-	def sqrMagnitude(self) -> float:
-		return vec3_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
-
-	def Normalize(self) -> None:
-		vec3_normalize_in_place(self._global_data_ptr, self._global_magnitude_ptr)
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	def NormalizeFrom(self, vec3 value) -> None:
-		vec3_normalize_from(self._global_data_ptr, self._global_magnitude_ptr, value._global_data_ptr, (<vec3>value)._global_magnitude_ptr)
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	@staticmethod
-	def GetNormalized(vec3 value) -> vec3:
-		cdef vec3 result = vec3()
-		vec3_normalize_from(result._global_data_ptr, result._global_magnitude_ptr, value._global_data_ptr, (<vec3>value)._global_magnitude_ptr)
-		return result
-
-	@staticmethod
-	def GetDotProduct(vec3 valueA, vec3 valueB) -> float:
-		return vec3_dot_product_vec3(valueA._global_data_ptr, valueB._global_data_ptr)
-
-	def CrossProduct(self, vec3 value) -> None:
-		vec3_cross_product_in_place(self._global_data_ptr, value._global_data_ptr)
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> None:
-		vec3_cross_product_from(self._global_data_ptr, valueA._global_data_ptr, valueB._global_data_ptr)
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-
-	@staticmethod
-	def GetCrossProduct(vec3 valueA, vec3 valueB) -> vec3:
-		cdef vec3 result = vec3()
-		vec3_cross_product_from(result._global_data_ptr, valueA._global_data_ptr, valueB._global_data_ptr)
-		return result
-
-
-	def __contains__(self, float value) -> bool:
-		return vec3_contains_float(self._global_data_ptr, value)
-
-	def __lt__(self, value: 'allowed_types_vec3') -> bool:
-		if isinstance(value, vec3):
-			return vec3_lt_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		return vec3_lt_float(self._global_data_ptr, value)
-	def __le__(self, value: 'allowed_types_vec3') -> bool:
-		if isinstance(value, vec3):
-			return vec3_le_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		return vec3_le_float(self._global_data_ptr, value)
-
-	def __eq__(self, value: 'allowed_types_vec3') -> bool:
-		if isinstance(value, vec3):
-			return vec3_eq_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		return vec3_eq_float(self._global_data_ptr, value)
-	def __ne__(self, value: 'allowed_types_vec3') -> bool:
-		if isinstance(value, vec3):
-			return vec3_ne_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		return vec3_ne_float(self._global_data_ptr, value)
-
-	def __gt__(self, value: 'allowed_types_vec3') -> bool:
-		if isinstance(value, vec3):
-			return vec3_gt_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		return vec3_gt_float(self._global_data_ptr, value)
-	def __ge__(self, value: 'allowed_types_vec3') -> bool:
-		if isinstance(value, vec3):
-			return vec3_ge_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		return vec3_ge_float(self._global_data_ptr, value)
-
-
-	def __neg__(self) -> vec3:
-		cdef vec3 result = vec3()
-		vec3_neg_from(result._global_data_ptr, self._global_data_ptr)
-		return result
-	def __pos__(self) -> vec3:
-		cdef vec3 result = vec3()
-		vec3_set_vec3(result._global_data_ptr, self._global_data_ptr)
-		return result
-	def __abs__(self) -> vec3:
-		cdef vec3 result = vec3()
-		vec3_abs_from(result._global_data_ptr, self._global_data_ptr)
-		return result
-
-	def __iadd__(self, value: 'allowed_types_vec3') -> vec3_ptr:
-		if isinstance(value, vec3):
-			vec3_iadd_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_iadd_float(self._global_data_ptr, value)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __add__(self, value: 'allowed_types_vec3') -> vec3:
-		cdef vec3 result = vec3()
-		if isinstance(value, vec3):
-			vec3_add_vec3(result._global_data_ptr, self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_add_float(result._global_data_ptr, self._global_data_ptr, value)
-		return result
-	def __radd__(self, float value) -> vec3:
-		cdef vec3 result = vec3()
-		float_add_vec3(result._global_data_ptr, value, self._global_data_ptr)
-		return result
-
-	def __isub__(self, value: 'allowed_types_vec3') -> vec3_ptr:
-		if isinstance(value, vec3):
-			vec3_isub_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_isub_float(self._global_data_ptr, value)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __sub__(self, value: 'allowed_types_vec3') -> vec3:
-		cdef vec3 result = vec3()
-		if isinstance(value, vec3):
-			vec3_sub_vec3(result._global_data_ptr, self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_sub_float(result._global_data_ptr, self._global_data_ptr, value)
-		return result
-	def __rsub__(self, float value) -> vec3:
-		cdef vec3 result = vec3()
-		float_sub_vec3(result._global_data_ptr, value, self._global_data_ptr)
-		return result
-
-	def __ipow__(self, value: 'allowed_types_vec3') -> vec3_ptr:
-		if isinstance(value, vec3):
-			vec3_ipow_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_ipow_float(self._global_data_ptr, value)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __pow__(self, value: 'allowed_types_vec3') -> vec3:
-		cdef vec3 result = vec3()
-		if isinstance(value, vec3):
-			vec3_pow_vec3(result._global_data_ptr, self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_pow_float(result._global_data_ptr, self._global_data_ptr, value)
-		return result
-	def __rpow__(self, float value) -> vec3:
-		cdef vec3 result = vec3()
-		float_pow_vec3(result._global_data_ptr, value, self._global_data_ptr)
-		return result
-	
-	def __itruediv__(self, value: 'allowed_types_vec3') -> vec3_ptr:
-		if isinstance(value, vec3):
-			vec3_itruediv_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_itruediv_float(self._global_data_ptr, value)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __truediv__(self, value: 'allowed_types_vec3') -> vec3:
-		cdef vec3 result = vec3()
-		if isinstance(value, vec3):
-			vec3_truediv_vec3(result._global_data_ptr, self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_truediv_float(result._global_data_ptr, self._global_data_ptr, value)
-		return result
-	def __rtruediv__(self, float value) -> vec3:
-		cdef vec3 result = vec3()
-		float_truediv_vec3(result._global_data_ptr, value, self._global_data_ptr)
-		return result
-	
-	def __ifloordiv__(self, value: 'allowed_types_vec3') -> vec3_ptr:
-		if isinstance(value, vec3):
-			vec3_ifloordiv_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_ifloordiv_float(self._global_data_ptr, value)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __floordiv__(self, value: 'allowed_types_vec3') -> vec3:
-		cdef vec3 result = vec3()
-		if isinstance(value, vec3):
-			vec3_floordiv_vec3(result._global_data_ptr, self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_floordiv_float(result._global_data_ptr, self._global_data_ptr, value)
-		return result
-	def __rfloordiv__(self, float value) -> vec3:
-		cdef vec3 result = vec3()
-		float_floordiv_vec3(result._global_data_ptr, value, self._global_data_ptr)
-		return result
-
-	def __imod__(self, value: 'allowed_types_vec3') -> vec3_ptr:
-		if isinstance(value, vec3):
-			vec3_imod_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_imod_float(self._global_data_ptr, value)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __mod__(self, value: 'allowed_types_vec3') -> vec3:
-		cdef vec3 result = vec3()
-		if isinstance(value, vec3):
-			vec3_mod_vec3(result._global_data_ptr, self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_mod_float(result._global_data_ptr, self._global_data_ptr, value)
-		return result
-	def __rmod__(self, float value) -> vec3:
-		cdef vec3 result = vec3()
-		float_mod_vec3(result._global_data_ptr, value, self._global_data_ptr)
-		return result
-
-	def __imul__(self, value: 'allowed_types_vec3') -> vec3_ptr:
-		if isinstance(value, vec3):
-			vec3_imul_vec3(self._global_data_ptr, (<vec3>value)._global_data_ptr)
-		else:
-			vec3_imul_float(self._global_data_ptr, value)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __mul__(self, value: 'allowed_types_vec3_mul') -> Union[vec3, mat3]:
-		if isinstance(value, vec3):
-			result = vec3()
-			vec3_mul_vec3((<vec3>result)._global_data_ptr, self._global_data_ptr, (<vec3>value)._global_data_ptr)
-			return result
-		elif isinstance(value, mat3):
-			result = mat3()
-			vec3_mul_mat3((<mat3>result)._global_data_ptr, self._global_data_ptr, (<mat3>value)._global_data_ptr)
-			return result
-		else:
-			result = vec3()
-			vec3_mul_float((<vec3>result)._global_data_ptr, self._global_data_ptr, value)
-			return result
-	def __rmul__(self, float value) -> vec3:
-		cdef vec3 result = vec3()
-		vec3_mul_float(result._global_data_ptr, self._global_data_ptr, value)
-		return result
-
-	def __imatmul__(self, mat3 value) -> vec3_ptr:
-		vec3_imatmul_mat3(self._global_data_ptr, value._global_data_ptr)
-		self._global_magnitude_ptr[0] = c_neg_one_float
-		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
-		return self
-	def __matmul__(self, mat3 value) -> vec3:
-		cdef vec3 result = vec3()
-		vec3_matmul_mat3(result._global_data_ptr, self._global_data_ptr, value._global_data_ptr)
-		return result
-
-
 
 cdef class vec3_ptr_static(vec3):
 
@@ -4474,11 +4168,13 @@ cdef class vec3_ptr_static(vec3):
 	def sqrMagnitude(self) -> float:
 		return vec3_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> vec3_ptr_static:
 		print("Not allowed")
+		return self
 
-	def NormalizeFrom(self, vec3 value) -> None:
+	def NormalizeFrom(self, vec3 value) -> vec3_ptr_static:
 		print("Not allowed")
+		return self
 
 	@staticmethod
 	def GetNormalized(vec3 value) -> vec3:
@@ -4490,11 +4186,13 @@ cdef class vec3_ptr_static(vec3):
 	def GetDotProduct(vec3 valueA, vec3 valueB) -> float:
 		return vec3_dot_product_vec3(valueA._global_data_ptr, valueB._global_data_ptr)
 
-	def CrossProduct(self, vec3 value) -> None:
+	def CrossProduct(self, vec3 value) -> vec3_ptr_static:
 		print("Not allowed")
+		return self
 
-	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> None:
+	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> vec3_ptr_static:
 		print("Not allowed")
+		return self
 
 	@staticmethod
 	def GetCrossProduct(vec3 valueA, vec3 valueB) -> vec3:
@@ -4778,15 +4476,17 @@ cdef class GlobalTransformPosition(vec3):
 	def sqrMagnitude(self) -> float:
 		return vec3_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> GlobalTransformPosition:
 		vec3_normalize_in_place(self._local_data_ptr, self._local_magnitude_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
-	def NormalizeFrom(self, vec3 value) -> None:
+	def NormalizeFrom(self, vec3 value) -> GlobalTransformPosition:
 		vec3_normalize_from(self._local_data_ptr, self._local_magnitude_ptr, value._global_data_ptr, (<vec3>value)._global_magnitude_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
 	@staticmethod
 	def GetNormalized(vec3 value) -> vec3:
@@ -4798,15 +4498,17 @@ cdef class GlobalTransformPosition(vec3):
 	def GetDotProduct(vec3 valueA, vec3 valueB) -> float:
 		return vec3_dot_product_vec3(valueA._global_data_ptr, valueB._global_data_ptr)
 
-	def CrossProduct(self, vec3 value) -> None:
+	def CrossProduct(self, vec3 value) -> GlobalTransformPosition:
 		vec3_cross_product_in_place(self._local_data_ptr, value._global_data_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
-	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> None:
+	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> GlobalTransformPosition:
 		vec3_cross_product_from(self._local_data_ptr, valueA._global_data_ptr, valueB._global_data_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
 	@staticmethod
 	def GetCrossProduct(vec3 valueA, vec3 valueB) -> vec3:
@@ -5125,15 +4827,17 @@ cdef class GlobalTransformScale(vec3):
 	def sqrMagnitude(self) -> float:
 		return vec3_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> GlobalTransformScale:
 		vec3_normalize_in_place(self._local_data_ptr, self._local_magnitude_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def NormalizeFrom(self, vec3 value) -> None:
+	def NormalizeFrom(self, vec3 value) -> GlobalTransformScale:
 		vec3_normalize_from(self._local_data_ptr, self._local_magnitude_ptr, value._global_data_ptr, (<vec3>value)._global_magnitude_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 	@staticmethod
 	def GetNormalized(vec3 value) -> vec3:
@@ -5145,15 +4849,17 @@ cdef class GlobalTransformScale(vec3):
 	def GetDotProduct(vec3 valueA, vec3 valueB) -> float:
 		return vec3_dot_product_vec3(valueA._global_data_ptr, valueB._global_data_ptr)
 
-	def CrossProduct(self, vec3 value) -> None:
+	def CrossProduct(self, vec3 value) -> GlobalTransformScale:
 		vec3_cross_product_in_place(self._local_data_ptr, value._global_data_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> None:
+	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> GlobalTransformScale:
 		vec3_cross_product_from(self._local_data_ptr, valueA._global_data_ptr, valueB._global_data_ptr)
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 	@staticmethod
 	def GetCrossProduct(vec3 valueA, vec3 valueB) -> vec3:
@@ -5510,26 +5216,30 @@ cdef class GlobalTransformRotation(Rotation):
 	def determinant(self) -> float:
 		return mat3_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> None:
+	def Inverse(self) -> GlobalTransformRotation:
 		mat3_inverse_in_place(self._local_data_ptr, self._local_determinant_ptr)
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
-	def InverseFrom(self, mat3 value) -> None:
+		return self
+	def InverseFrom(self, mat3 value) -> GlobalTransformRotation:
 		mat3_inverse_from(self._local_data_ptr, self._local_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 	@staticmethod
 	def GetInverse(mat3 value) -> Rotation:
 		cdef Rotation result = Rotation()
 		mat3_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> None:
+	def Transpose(self) -> GlobalTransformRotation:
 		mat3_transpose_in_place(self._local_data_ptr)
 		self._local_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
-	def TransposeFrom(self, mat3 value) -> None:
+		return self
+	def TransposeFrom(self, mat3 value) -> GlobalTransformRotation:
 		mat3_transpose_from(self._local_data_ptr, value._global_data_ptr)
 		self._local_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 	@staticmethod
 	def GetTransposed(mat3 value) -> Rotation:
 		cdef Rotation result = Rotation()
@@ -5839,15 +5549,17 @@ cdef class LocalTransformPosition(vec3):
 	def sqrMagnitude(self) -> float:
 		return vec3_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> LocalTransformPosition:
 		vec3_normalize_in_place(self._global_data_ptr, self._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
-	def NormalizeFrom(self, vec3 value) -> None:
+	def NormalizeFrom(self, vec3 value) -> LocalTransformPosition:
 		vec3_normalize_from(self._global_data_ptr, self._global_magnitude_ptr, value._global_data_ptr, (<vec3>value)._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
 	@staticmethod
 	def GetNormalized(vec3 value) -> vec3:
@@ -5859,15 +5571,17 @@ cdef class LocalTransformPosition(vec3):
 	def GetDotProduct(vec3 valueA, vec3 valueB) -> float:
 		return vec3_dot_product_vec3(valueA._global_data_ptr, valueB._global_data_ptr)
 
-	def CrossProduct(self, vec3 value) -> None:
+	def CrossProduct(self, vec3 value) -> LocalTransformPosition:
 		vec3_cross_product_in_place(self._global_data_ptr, value._global_data_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
-	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> None:
+	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> LocalTransformPosition:
 		vec3_cross_product_from(self._global_data_ptr, valueA._global_data_ptr, valueB._global_data_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
 	@staticmethod
 	def GetCrossProduct(vec3 valueA, vec3 valueB) -> vec3:
@@ -6182,15 +5896,17 @@ cdef class LocalTransformScale(vec3):
 	def sqrMagnitude(self) -> float:
 		return vec3_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> None:
+	def Normalize(self) -> LocalTransformScale:
 		vec3_normalize_in_place(self._global_data_ptr, self._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def NormalizeFrom(self, vec3 value) -> None:
+	def NormalizeFrom(self, vec3 value) -> LocalTransformScale:
 		vec3_normalize_from(self._global_data_ptr, self._global_magnitude_ptr, value._global_data_ptr, (<vec3>value)._global_magnitude_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 	@staticmethod
 	def GetNormalized(vec3 value) -> vec3:
@@ -6202,15 +5918,17 @@ cdef class LocalTransformScale(vec3):
 	def GetDotProduct(vec3 valueA, vec3 valueB) -> float:
 		return vec3_dot_product_vec3(valueA._global_data_ptr, valueB._global_data_ptr)
 
-	def CrossProduct(self, vec3 value) -> None:
+	def CrossProduct(self, vec3 value) -> LocalTransformScale:
 		vec3_cross_product_in_place(self._global_data_ptr, value._global_data_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> None:
+	def CrossProductFrom(self, vec3 valueA, vec3 valueB) -> LocalTransformScale:
 		vec3_cross_product_from(self._global_data_ptr, valueA._global_data_ptr, valueB._global_data_ptr)
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 	@staticmethod
 	def GetCrossProduct(vec3 valueA, vec3 valueB) -> vec3:
@@ -6564,26 +6282,30 @@ cdef class LocalTransformRotation(Rotation):
 	def determinant(self) -> float:
 		return mat3_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> None:
+	def Inverse(self) -> LocalTransformRotation:
 		mat3_inverse_in_place(self._global_data_ptr, self._global_determinant_ptr)
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
-	def InverseFrom(self, mat3 value) -> None:
+		return self
+	def InverseFrom(self, mat3 value) -> LocalTransformRotation:
 		mat3_inverse_from(self._global_data_ptr, self._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 	@staticmethod
 	def GetInverse(mat3 value) -> Rotation:
 		cdef Rotation result = Rotation()
 		mat3_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> None:
+	def Transpose(self) -> LocalTransformRotation:
 		mat3_transpose_in_place(self._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
-	def TransposeFrom(self, mat3 value) -> None:
+		return self
+	def TransposeFrom(self, mat3 value) -> LocalTransformRotation:
 		mat3_transpose_from(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 	@staticmethod
 	def GetTransposed(mat3 value) -> Rotation:
 		cdef Rotation result = Rotation()
@@ -6871,20 +6593,24 @@ cdef class TransformMatrix(mat4):
 	def determinant(self) -> float:
 		return mat4_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> None:
+	def Inverse(self) -> mat4:
 		print("Not allowed")
-	def InverseFrom(self, mat4 value) -> None:
+		return self
+	def InverseFrom(self, mat4 value) -> mat4:
 		print("Not allowed")
+		return self
 	@staticmethod
 	def GetInverse(mat4 value) -> mat4:
 		cdef mat4 result = mat4()
 		mat4_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> None:
+	def Transpose(self) -> mat4:
 		print("Not allowed")
-	def TransposeFrom(self, mat4 value) -> None:
+		return self
+	def TransposeFrom(self, mat4 value) -> mat4:
 		print("Not allowed")
+		return self
 	@staticmethod
 	def GetTransposed(mat4 value) -> mat4:
 		cdef mat4 result = mat4()
@@ -7437,3 +7163,140 @@ cdef inline void TransformUpdateGlobalMatrixSRT(Transform transform):
 
 	for child_transform in transform._children:
 		TransformUpdateGlobalMatrixSRT(<Transform>child_transform)
+
+
+
+
+cdef class Ray:
+	cdef vec3 _ro
+	cdef vec3 _rd
+
+	def __init__(self, vec3 ro, vec3 rd) -> None:
+		self._ro = ro
+		self._rd = rd
+
+	@property
+	def ro(self) -> vec3:
+		return self._ro
+	@ro.setter
+	def ro(self, vec3 value) -> None:
+		vec3_set_vec3(self._ro._global_data_ptr, value._global_data_ptr)
+
+	@property
+	def rd(self) -> vec3:
+		return self._rd
+	@rd.setter
+	def rd(self, vec3 value) -> None:
+		vec3_set_vec3(self._rd._global_data_ptr, value._global_data_ptr)
+
+
+cdef class IntersectResult:
+	cdef vec3 _ro
+	cdef vec3 _rd
+	cdef vec3 _hit_point
+	cdef vec3 _hit_normal
+	cdef float _nearest_hit_distance
+
+	def __init__(self, vec3 ro, vec3 rd, vec3 hit_point, vec3 hit_normal, float nearest_hit_distance) -> None:
+		self._ro = vec3()
+		self._rd = vec3()
+		self._hit_point = vec3()
+		self._hit_normal = vec3()
+		self._nearest_hit_distance = c_neg_one_float
+	
+	def SetValue(self, IntersectResult intersect_result) -> None:
+		vec3_set_vec3(self._ro._global_data_ptr, intersect_result._ro._global_data_ptr)
+		vec3_set_vec3(self._rd._global_data_ptr, intersect_result._rd._global_data_ptr)
+		vec3_set_vec3(self._hit_point._global_data_ptr, intersect_result._hit_point._global_data_ptr)
+		vec3_set_vec3(self._hit_normal._global_data_ptr, intersect_result._hit_normal._global_data_ptr)
+		self._nearest_hit_distance = intersect_result._nearest_hit_distance
+
+	@property
+	def ro(self) -> vec3:
+		return self._ro
+	@ro.setter
+	def ro(self, vec3 value) -> None:
+		vec3_set_vec3(self._ro._global_data_ptr, value._global_data_ptr)
+
+	@property
+	def rd(self) -> vec3:
+		return self._rd
+	@rd.setter
+	def rd(self, vec3 value) -> None:
+		vec3_set_vec3(self._rd._global_data_ptr, value._global_data_ptr)
+
+	@property
+	def hit_point(self) -> vec3:
+		return self._hit_point
+	@hit_point.setter
+	def hit_point(self, vec3 value) -> None:
+		vec3_set_vec3(self._hit_point._global_data_ptr, value._global_data_ptr)
+
+	@property
+	def hit_normal(self) -> vec3:
+		return self._hit_normal
+	@hit_normal.setter
+	def hit_normal(self, vec3 value) -> None:
+		vec3_set_vec3(self._hit_normal._global_data_ptr, value._global_data_ptr)
+
+	@property
+	def nearest_hit_distance(self) -> float:
+		return self._nearest_hit_distance
+	@nearest_hit_distance.setter
+	def nearest_hit_distance(self, float value) -> None:
+		self._nearest_hit_distance = value
+
+
+
+def sphIntersect(Ray ray, mat4 sphere, IntersectResult intersect_result) -> None:
+	funsphIntersect(ray, sphere, intersect_result)
+
+cdef inline void funsphIntersect(Ray ray, mat4 sphere, IntersectResult intersect_result):
+	cdef float* ce[3]
+	ce[0] = sphere._global_data_ptr[12]
+	ce[1] = sphere._global_data_ptr[13]
+	ce[2] = sphere._global_data_ptr[14]
+	
+	cdef float[4] ro
+	cdef float* ro_ptr[4]
+	for i in range(3):
+		ro[i] = ray._ro._global_data_ptr[i][0]
+		ro_ptr[i] = &ro[i]
+	ro[3] = c_one_float
+	ro_ptr[3] = &ro[3]
+
+	cdef float[4] oc
+	cdef float* oc_ptr[4]
+	for i in range(4):
+		oc[i] = c_zero_float
+		oc_ptr[i] = &oc[i]
+
+
+	vec4_matmul_mat4(oc_ptr, ro_ptr, sphere._global_data_ptr)
+	for i in range(4): oc[i] = -oc[i]
+
+	cdef float b = vec3_dot_product_vec3(oc_ptr, ray._rd._global_data_ptr)
+	cdef float c = vec3_dot_product_vec3(oc_ptr,oc_ptr) - c_one_float
+	cdef float h = b*b - c
+	if(h<c_zero_float):
+		intersect_result._nearest_hit_distance = c_neg_one_float
+		return #c_neg_one_float
+
+	h = sqrtf(h)
+
+	intersect_result._nearest_hit_distance = -b-h
+
+	vec3_set_vec3(intersect_result._ro._global_data_ptr, ro_ptr)
+	vec3_set_vec3(intersect_result._rd._global_data_ptr, ray._rd._global_data_ptr)
+
+	cdef float[3] ray_dist
+	cdef float* ray_dist_ptr[3]
+	for i in range(3):
+		ray_dist[i] = ray._rd._global_data_ptr[i][0] * intersect_result._nearest_hit_distance
+		ray_dist_ptr[i] = &ray_dist[i]
+	
+	vec3_add_vec3(intersect_result._hit_point._global_data_ptr, ro_ptr, ray_dist_ptr)
+
+	vec3_sub_vec3(intersect_result._hit_normal._global_data_ptr, intersect_result._hit_point._global_data_ptr, ce)
+
+	vec3_normalize_in_place(intersect_result._hit_normal._global_data_ptr, intersect_result._hit_normal._global_magnitude_ptr)

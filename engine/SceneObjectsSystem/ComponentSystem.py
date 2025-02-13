@@ -43,6 +43,15 @@ class ComponentManagerSystem:
 		cls.__COMPONENTS_IN_GAME_OBJECT_BY_NAME[window_id] = {}
 
 	@classmethod
+	def WindowFlush(cls, window_id: int) -> None:
+		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
+		c = cls.__ICOMPONENT[window_id]
+		for component in c.values():
+			component.destroy()
+		c.clear()
+		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
+
+	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
 		for component in cls.__ICOMPONENT[window_id].values():

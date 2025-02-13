@@ -3,7 +3,8 @@ from Project import *
 import sys
 
 
-def upd1(): ...
+def upd1():
+	print(Mouse.GetPosition(), end="\r")
 
 
 def main() -> int:
@@ -14,9 +15,10 @@ def main() -> int:
 		resize=False,
 	)
 	#for _ in range(1000): Update(upd1)
-	#SceneManager.RunScene("MainScene")
+	#Update(upd1)
+	SceneManager.RunScene("MainScene")
 
-
+	SceneManager.EndScene()
 
 	# Window(
 	# 	title="3DEngine2",

@@ -33,6 +33,16 @@ class UpdateSystem:
 		cls.__DELTA_TIME[window_id] = 0.0
 
 	@classmethod
+	def WindowFlush(cls, window_id: int) -> None:
+		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
+		u = cls.__UPDATES[window_id]
+		cls.__CheckQueueChange(window_id, u)
+		for queue in u:
+			for update in u[queue]: update.destroy()
+		u.clear()
+		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
+
+	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
 		u = cls.__UPDATES[window_id]

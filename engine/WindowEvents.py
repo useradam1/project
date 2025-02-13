@@ -1,9 +1,11 @@
 from .ApiWindow import GetCurrentTime
 from .Profiler import Profiler
 
+
+from .WindowSystem.Controllers.Mouse import MouseSystem
 from .UpdateSystem import UpdateSystem
-from .WindowSystem.Controller.Mouse import MouseSystem
-from .SceneObjectsSystem import SceneManagerSystem, ComponentManagerSystem
+from .SceneObjectsSystem import SceneManagerSystem
+from .SceneObjectsSystem import ComponentManagerSystem
 
 
 def WindowInitialization(window_id: int) -> None:
@@ -12,6 +14,10 @@ def WindowInitialization(window_id: int) -> None:
 	ComponentManagerSystem.WindowInitialization(window_id)
 	SceneManagerSystem.WindowInitialization(window_id)
 
+def WindowFlush(window_id: int) -> None:
+	SceneManagerSystem.WindowFlush(window_id)
+	ComponentManagerSystem.WindowFlush(window_id)
+	UpdateSystem.WindowFlush(window_id)
 
 def WindowTerminate(window_id: int) -> None:
 	SceneManagerSystem.WindowTerminate(window_id)

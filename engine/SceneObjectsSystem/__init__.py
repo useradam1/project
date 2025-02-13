@@ -1,4 +1,4 @@
-from .SceneSystem import SceneManagerSystem, SceneManager
+from .SceneSystem import SceneManagerSystem
 from .Scene import Scene
 
 from .GameObject import GameObject

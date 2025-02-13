@@ -85,7 +85,7 @@ git add .
 
 
 :: Коммит с сообщением
-git commit -m "Update: %projectName%-%version% ChangeLog: !commitDescription!"
+git commit -m "Update: %projectName%-%version%" -m "ChangeLog: !commitDescription!"
 
 :: Пуш изменений в удалённый репозиторий
 git push -u origin %BRANCH_NAME%

@@ -1,5 +1,5 @@
-from .SceneInterface import SceneInterface, IScene
-from .SceneSystem import SceneManagerSystem
+from .SceneInterface import SceneInterface
+from .SceneSystem import SceneManagerSystem, IScene
 from ..Log import LogColors, PrintLog
 
 class Scene(SceneInterface):
