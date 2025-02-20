@@ -4,6 +4,10 @@ class MainScene(Scene):
 
 
 	def Load(self) -> None:
+		self.shader = Shader()
+		self.shader.LoadToRam({
+			"path": 'FRAGMENT_SHADER'
+		})
 		pass
 
 
@@ -37,6 +41,5 @@ class MainScene(Scene):
 
 	def Unload(self) -> None:
 		self.MainCamera.Destroy()
-		del self.MainCamera
+		self.shader.Destroy()
 
-MainScene()

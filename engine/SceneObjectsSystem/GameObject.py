@@ -41,7 +41,7 @@ class GameObject(GameObjectInterface):
 
 		self.__WINDOW_ID = WindowContextSystem.GetCurrentWindowId()
 		if(not self.__WINDOW_ID):
-			PrintLog("GameObject cannot be created outside of the window context", color= LogColors.RED)
+			PrintLog(f"{self.__class__.__name__} cannot be created outside of the window context", color= LogColors.RED)
 			return
 		
 		self.__IGAME_OBJECT = IGameObject(
@@ -53,18 +53,18 @@ class GameObject(GameObjectInterface):
 		)
 		if(not SceneManagerSystem.AppendGameObject(self.__IGAME_OBJECT, self.__WINDOW_ID)):
 			del self.__IGAME_OBJECT
-			PrintLog("GameObject registration denied", color= LogColors.RED)
+			PrintLog(f"{self.__class__.__name__} registration denied", color= LogColors.RED)
 			return
 		
 		self.__STATUS_EXIST = True
-		PrintLog("GameObject Initialization", color= LogColors.GREEN)
+		PrintLog(f"{self.__class__.__name__} Initialization", color= LogColors.GREEN)
 
 		for component in components:
 			ComponentManagerSystem.InitializationComponent(component.GetId(), self.__IGAME_OBJECT, self.__WINDOW_ID)
 	
 	
 	def __del__(self) -> None:
-		PrintLog("GameObject deleted", color= LogColors.BLUE)
+		PrintLog(f"{self.__class__.__name__} deleted", color= LogColors.BLUE)
 
 
 	def Destroy(self) -> None:
@@ -77,7 +77,7 @@ class GameObject(GameObjectInterface):
 			self.__PARENT = None
 			self.__HAS_PARENT = False
 			self.__STATUS_EXIST = False
-			PrintLog("GameObject Terminate", color= LogColors.YELLOW)
+			PrintLog(f"{self.__class__.__name__} Terminate", color= LogColors.YELLOW)
 
 
 	def GetId(self) -> int:
