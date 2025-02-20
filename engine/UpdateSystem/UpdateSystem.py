@@ -8,8 +8,12 @@ class IUpdate:
 	tick: Callable[[float], None]
 	destroy: Callable[[], None]
 	queue: int
+	def __init__(self, tick: Callable[[float], None], destroy: Callable[[], None], queue: int) -> None:
+		self.tick = tick
+		self.destroy = destroy
+		self.queue = queue
 
-class UpdateSystem:
+class UpdateManagerSystem:
 
 	__ENABLE_QUEUE_UPDATES: Dict[int, bool] = {}
 	__QUEUE_CHANGE: Dict[int, int] = {}
@@ -124,8 +128,8 @@ class Time:
 
 	@classmethod
 	def GetTime(cls) -> float:
-		return UpdateSystem.GetTime(WindowContextSystem.GetCurrentWindowId())
+		return UpdateManagerSystem.GetTime(WindowContextSystem.GetCurrentWindowId())
 
 	@classmethod
 	def GetDeltaTime(cls) -> float:
-		return UpdateSystem.GetDeltaTime(WindowContextSystem.GetCurrentWindowId())
+		return UpdateManagerSystem.GetDeltaTime(WindowContextSystem.GetCurrentWindowId())

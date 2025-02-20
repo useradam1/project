@@ -17,12 +17,12 @@ class Component(ComponentInterface):
 	__STATUS_EXIST: bool
 	__AWAKE: bool
 
-	__WINDOW_ID: int
-	__ICOMPONENT: IComponent
-
 	__GAME_OBJECT_ID: int
 	__GAME_OBJECT: GameObjectInterface
 	__TRANSFORM: Transform
+
+	__WINDOW_ID: int
+	__ICOMPONENT: IComponent
 
 	@Protected
 	def __Awake(self) -> bool:
@@ -33,7 +33,7 @@ class Component(ComponentInterface):
 
 		self.__WINDOW_ID = WindowContextSystem.GetCurrentWindowId()
 		if(not self.__WINDOW_ID):
-			PrintLog("Component cannot be created outside of the window context", color= LogColors.RED)
+			PrintLog(f"{self.__class__.__name__} cannot be created outside of the window context", color= LogColors.RED)
 			return False
 
 		self.__ICOMPONENT = IComponent(
@@ -47,7 +47,7 @@ class Component(ComponentInterface):
 
 		if(not ComponentManagerSystem.AppendComponent(self.__ICOMPONENT, self.__WINDOW_ID)):
 			del self.__ICOMPONENT
-			PrintLog("Component registration denied", color= LogColors.RED)
+			PrintLog(f"{self.__class__.__name__} registration denied", color= LogColors.RED)
 			return False
 
 		self.__AWAKE = True

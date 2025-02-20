@@ -45,7 +45,7 @@ def CreateShader(paths: Dict[str,Literal['VERTEX_SHADER','GEOMETRY_SHADER','FRAG
 	# Проверяем, слинковалась ли шейдерная программа
 	ok = glGetProgramiv(shader_program, GL_LINK_STATUS)
 	if not ok:
-		info_log = glGetProgramInfoLog(shader_program)
+		info_log: str = glGetProgramInfoLog(shader_program)
 		glDeleteProgram(shader_program)
 		return (nulluint32, info_log)
 	

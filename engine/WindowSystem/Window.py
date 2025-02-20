@@ -65,7 +65,7 @@ class Window(WindowInterface):
 
 		if(not WindowManagerSystem.AppendWindow(self.__IWINDOW)):
 			del self.__IWINDOW
-			PrintLog("Window registration denied", color= LogColors.RED)
+			PrintLog(f"{self.__class__.__name__} registration denied", color= LogColors.RED)
 			return
 
 		self.__WINDOW_OBJECT = CreateWindow(int(self.__SIZE.x), int(self.__SIZE.y), self.__TITLE)
@@ -73,7 +73,7 @@ class Window(WindowInterface):
 		if self.__WINDOW_OBJECT is None:
 			WindowManagerSystem.RemoveWindow(self.__IWINDOW)
 			del self.__IWINDOW
-			PrintLog("Window critical error", color= LogColors.RED)
+			PrintLog(f"{self.__class__.__name__} critical error", color= LogColors.RED)
 			return
 
 		self.__IN_FOCUS = 1
@@ -88,11 +88,11 @@ class Window(WindowInterface):
 		SetCallbackWindowPosition(self.__WINDOW_OBJECT, self.__CallbackPosition)
 
 		self.__STATUS_EXIST = True
-		PrintLog("Window Initialization", color= LogColors.GREEN)
+		PrintLog(f"{self.__class__.__name__} Initialization", color= LogColors.GREEN)
 		WindowInitialization(self.__ID)
 
 	def __del__(self) -> None:
-		PrintLog("Window deleted", color= LogColors.BLUE)
+		PrintLog(f"{self.__class__.__name__} deleted", color= LogColors.BLUE)
 
 
 	def Destroy(self) -> None:
@@ -114,7 +114,7 @@ class Window(WindowInterface):
 			self.__WINDOW_OBJECT = None
 			del self.__IWINDOW
 			self.__STATUS_EXIST = False
-			PrintLog("Window Terminate", color= LogColors.YELLOW)
+			PrintLog(f"{self.__class__.__name__} Terminate", color= LogColors.YELLOW)
 		self.__REQUEST_DESTROY = 0
 
 
