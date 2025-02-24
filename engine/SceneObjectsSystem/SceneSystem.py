@@ -1,6 +1,8 @@
 from .GameObjectInterface import GameObjectInterface
-from typing import Dict, Set, Optional, Callable, List
+from .SceneInterface import SceneInterface
+from typing import Dict, Set, Optional, Callable, List, Type
 
+from ..Log import PrintLog, LogColors
 
 emptyset = set()
 
@@ -16,67 +18,51 @@ class IGameObject:
 	getTag: Callable[[], str]
 	destroy: Callable[[], None]
 
-@dataclass(frozen=True)
-class IScene:
-	name: str
-	load: Callable[[],None]
-	start: Callable[[],None]
-	unload: Callable[[],None]
-	destroy: Callable[[],None]
-
 
 class SceneManagerSystem:
 
-	__ENABLE_QUEUE_UPDATES_SCENES: bool = True
-	__SCENES: Dict[str, IScene] = {}
-	__ACTIVE_SCENE: Dict[int, Optional[IScene]] = {}
+	__REGISTRY_SCENES: Dict[str, Type[SceneInterface]] = {}
+	__ACTIVE_SCENE: Dict[int, Optional[SceneInterface]] = {}
 
 
-	__ENABLE_QUEUE_UPDATES: Dict[int, bool] = {}
+	__ENABLE_QUEUE_GAME_OBJECTS: Dict[int, bool] = {}
 	__IGAME_OBJECTS: Dict[int, Set[IGameObject]] = {}
 	__GAME_OBJECTS_BY_NAME: Dict[int, Dict[str, Set[GameObjectInterface]]] = {}
 	__GAME_OBJECTS_BY_TAG: Dict[int, Dict[str, Set[GameObjectInterface]]] = {}
 
-	@classmethod
-	def DestroyAllScenes(cls) -> None:
-		cls.__ENABLE_QUEUE_UPDATES_SCENES = False
-		for scene in cls.__SCENES.items(): scene[1].destroy()
-		cls.__SCENES.clear()
-		cls.__ENABLE_QUEUE_UPDATES_SCENES = True
 
 	@classmethod
 	def WindowInitialization(cls, window_id: int) -> None:
 		cls.__ACTIVE_SCENE[window_id] = None
-		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
+		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = True
 		cls.__IGAME_OBJECTS[window_id] = set()
 		cls.__GAME_OBJECTS_BY_NAME[window_id] = {}
 		cls.__GAME_OBJECTS_BY_TAG[window_id] = {}
 
 	@classmethod
 	def WindowFlush(cls, window_id: int) -> None:
-		scene = cls.__ACTIVE_SCENE.get(window_id, None)
-		if(scene is not None):
-			scene.unload()
-			cls.__ACTIVE_SCENE[window_id] = None
+		active_scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(active_scene is not None): active_scene.Destroy()
+		cls.__ACTIVE_SCENE[window_id] = None
 
-		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
+		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = True
 		go = cls.__IGAME_OBJECTS[window_id]
 		for gameObject in go:
 			gameObject.destroy()
 		go.clear()
-		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
+		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = False
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
-		scene = cls.__ACTIVE_SCENE.get(window_id, None)
-		if(scene is not None):
-			scene.unload()
+		active_scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(active_scene is not None):
+			active_scene.Destroy()
 			cls.__ACTIVE_SCENE[window_id] = None
 
-		cls.__ENABLE_QUEUE_UPDATES[window_id] = False
+		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = False
 		for gameObject in cls.__IGAME_OBJECTS[window_id]:
 			gameObject.destroy()
-		cls.__ENABLE_QUEUE_UPDATES.pop(window_id, None)
+		cls.__ENABLE_QUEUE_GAME_OBJECTS.pop(window_id, None)
 
 		cls.__IGAME_OBJECTS.pop(window_id, None)
 		cls.__GAME_OBJECTS_BY_NAME.pop(window_id, None)
@@ -84,56 +70,60 @@ class SceneManagerSystem:
 		cls.__ACTIVE_SCENE.pop(window_id, None)
 
 
-	@classmethod
-	def GetActiveScene(cls, window_id: int) -> str:
-		scene = cls.__ACTIVE_SCENE.get(window_id, None)
-		if(scene is None): return ""
-		return scene.name
+
 
 
 	@classmethod
-	def GetScenes(cls) -> List[str]:
-		return [scene for scene in cls.__SCENES]
+	def GetActiveScene(cls, window_id: int) -> Optional[SceneInterface]:
+		active_scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(active_scene is None): return None
+		return active_scene
 
+	@classmethod
+	def GetRegistryScenes(cls) -> List[str]:
+		return [scene for scene in cls.__REGISTRY_SCENES]
 
 	@classmethod
 	def RunScene(cls, window_id: int, name_scene: str) -> None:
-		scene = cls.__ACTIVE_SCENE.get(window_id, None)
-		if(scene is not None):
-			scene.unload()
-			cls.__ACTIVE_SCENE[window_id] = None
+		scene_type = cls.__REGISTRY_SCENES.get(name_scene, None)
+		if(scene_type is None):
+			PrintLog(f"can not find scene named {name_scene}", LogColors.RED)
+			return
 
-		scene = cls.__SCENES.get(name_scene, None)
-		if(scene is None): return
+		active_scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(active_scene is not None): active_scene.Destroy()
 
-		scene.load()
-		scene.start()
+		scene_type()
+
+	@classmethod
+	def DestroyScene(cls, window_id: int) -> None:
+		active_scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(active_scene is not None): active_scene.Destroy()
+		cls.__ACTIVE_SCENE[window_id] = None
+
+	@classmethod
+	def RemoveScene(cls, scene: SceneInterface, window_id: int) -> None:
+		active_scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(scene is active_scene): cls.__ACTIVE_SCENE[window_id] = None
+
+	@classmethod
+	def AppendScene(cls, scene: SceneInterface, window_id: int) -> None:
+		active_scene = cls.__ACTIVE_SCENE.get(window_id, None)
+		if(active_scene is not None): active_scene.Destroy()
 		cls.__ACTIVE_SCENE[window_id] = scene
 
 	@classmethod
-	def EndScene(cls, window_id: int) -> None:
-		scene = cls.__ACTIVE_SCENE.get(window_id, None)
-		if(scene is not None):
-			scene.unload()
-			cls.__ACTIVE_SCENE[window_id] = None
-
-
-
-	@classmethod
-	def AppendScene(cls, scene: IScene) -> bool:
-		if(not cls.__ENABLE_QUEUE_UPDATES_SCENES): return False
-		cls.__SCENES[scene.name] = scene
+	def RegisterScene(cls, scene: Type[SceneInterface]) -> bool:
+		if(scene.__class__.__name__ in cls.__REGISTRY_SCENES): return False
+		cls.__REGISTRY_SCENES[scene.__name__] = scene
 		return True
 
-	@classmethod
-	def RemoveScene(cls, scene: IScene) -> None:
-		if(not cls.__ENABLE_QUEUE_UPDATES_SCENES): return
-		cls.__SCENES.pop(scene.name, None)
+
 
 
 	@classmethod
 	def AppendGameObject(cls, igameObject: IGameObject, window_id: int) -> bool:
-		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]): return False
+		if(not cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id]): return False
 
 		cls.__IGAME_OBJECTS[window_id].add(igameObject)
 
@@ -151,7 +141,7 @@ class SceneManagerSystem:
 
 	@classmethod
 	def RemoveGameObject(cls, igameObject: IGameObject, window_id: int) -> None:
-		if(not cls.__ENABLE_QUEUE_UPDATES[window_id]): return
+		if(not cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id]): return
 
 		cls.__IGAME_OBJECTS[window_id].remove(igameObject)
 

@@ -23,13 +23,15 @@ class FlowControlSystem:
 			process = ProcessTask()
 			process.Run()
 			cls.__PROCESSES_IN_FRAME.append(process)
-	
+
 	@classmethod
 	def Terminate(cls) -> None:
 		for thread in cls.__THREADS_IN_FRAME:
 			thread.Destroy()
+		cls.__THREADS_IN_FRAME.clear()
 		for process in cls.__PROCESSES_IN_FRAME:
 			process.Destroy()
+		cls.__PROCESSES_IN_FRAME.clear()
 
 
 	@classmethod
