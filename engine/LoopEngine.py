@@ -17,5 +17,4 @@ def StartEngine() -> None:
 		WindowManagerSystem.Tick()
 		#showDiagram()
 	WindowManagerSystem.CleaningResources()
-	SceneManagerSystem.DestroyAllScenes()
 	#Profiler.ProfilerOff()

@@ -1,7 +1,8 @@
 from ..WindowSystem import WindowContextSystem
 from .SceneSystem import SceneManagerSystem
+from .SceneInterface import SceneInterface
 from ..WindowEvents import WindowFlush
-from typing import List
+from typing import List, Optional
 
 
 emptyset = set()
@@ -25,14 +26,14 @@ class SceneManager:
 		SceneManagerSystem.RunScene(WindowContextSystem.GetCurrentWindowId(), name_scene)
 
 	@classmethod
-	def EndScene(cls) -> None:
+	def DestroyScene(cls) -> None:
+		SceneManagerSystem.DestroyScene(WindowContextSystem.GetCurrentWindowId())
 		WindowFlush(WindowContextSystem.GetCurrentWindowId())
-		#SceneManagerSystem.EndScene(WindowContextSystem.GetCurrentWindowId())
 
 	@classmethod
-	def GetScenes(cls) -> List[str]:
-		return SceneManagerSystem.GetScenes()
+	def GetRegistryScenes(cls) -> List[str]:
+		return SceneManagerSystem.GetRegistryScenes()
 
 	@classmethod
-	def GetActiveScene(cls) -> str:
+	def GetActiveScene(cls) -> Optional[SceneInterface]:
 		return SceneManagerSystem.GetActiveScene(WindowContextSystem.GetCurrentWindowId())

@@ -1,12 +1,11 @@
 from engine import *
-from Project import *
+import Project
 import sys
 
 
 
 
 def main() -> int:
-	ProjectInit()
 
 	Window(
 		title="3DEngine1",
