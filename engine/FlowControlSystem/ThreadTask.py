@@ -1,15 +1,15 @@
 from threading import Thread
 from queue import Queue
-from typing import Callable, Any, TypedDict, Tuple
+from typing import Callable, TypedDict
 
 #from ..Log import LogColors, PrintLog
 
 
 class Task(TypedDict):
-	func: Callable[[Any], None]
-	args: Tuple[Any, ...]
+	func: Callable[[dict], None]
+	arg: dict
 
-def FinalMethod(x: str) -> None: ...
+def FinalMethod(x: dict) -> None: ...
 	#print('ThreadTask fin')
 
 class ThreadTask:
@@ -28,9 +28,9 @@ class ThreadTask:
 
 	def loop(self) -> None:
 		while self.__IS_RUN:
-			task = self.__QUEUE.get()
-			func, args = task['func'], task['args']
-			func(*args)
+			queue = self.__QUEUE.get()
+			func, arg = queue['func'], queue['arg']
+			func(arg)
 			self.__QUEUE.task_done()
 		#PrintLog(f"{self.__class__.__name__} Terminate", color= LogColors.YELLOW)
 
@@ -46,14 +46,14 @@ class ThreadTask:
 			self.__IS_RUN = False
 			self.__QUEUE.put_nowait(Task(
 				func= FinalMethod,
-				args= tuple('1')
+				arg= {}
 			))
 			self.__THREAD.join()
 			self.__QUEUE = Queue()
 
-	def Put(self, task: Callable[[Any], None], *args) -> None:
+	def Put(self, task: Callable[[dict], None], arg: dict) -> None:
 		#if(self.__IS_RUN):
 		self.__QUEUE.put_nowait(Task(
 			func= task,
-			args= args
+			arg= arg
 		))

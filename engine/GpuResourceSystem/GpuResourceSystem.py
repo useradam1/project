@@ -5,19 +5,10 @@ from numpy import uint32
 
 class IGpuResource:
 	destroy: Callable[[], None]
-	object_id: uint32
-	load_status: bool
-	fixed_update: FixedUpdate
 	def __init__(self,
 			destroy: Callable[[], None],
-			object_id: uint32,
-			load_status: bool,
-			fixed_update: FixedUpdate
 	) -> None:
 		self.destroy = destroy
-		self.object_id = object_id
-		self.load_status = load_status
-		self.fixed_update = fixed_update
 
 
 

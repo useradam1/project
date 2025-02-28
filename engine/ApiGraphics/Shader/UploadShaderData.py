@@ -85,6 +85,7 @@ class ShaderData:
 	
 	def UploadShader(self, shader_target_id: uint32):
 		if(shader_target_id==nulluint32): return
+		self.TEXTURE_ID = 0
 		self.ATTRIBUTES.clear()
 		attrib_count = glGetProgramiv(shader_target_id, GL_ACTIVE_ATTRIBUTES)
 		for i in range(attrib_count):
@@ -105,7 +106,7 @@ class ShaderData:
 			del name, size, type_data, location
 		del uniform_count
 
-	def Clear(self):
+	def ClearShader(self):
 		self.ATTRIBUTES.clear()
 		self.UNIFORMS.clear()
 		self.TEXTURE_ID = 0

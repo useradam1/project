@@ -1,7 +1,7 @@
 from .ProcessTask import ProcessTask
 from .ThreadTask import ThreadTask
 
-from typing import List, Callable, Any
+from typing import List, Callable
 
 
 class FlowControlSystem:
@@ -35,23 +35,23 @@ class FlowControlSystem:
 
 
 	@classmethod
-	def CreateFrameThreadTask(cls, task: Callable[[Any], None], *args) -> None:
-		cls.__THREADS_IN_FRAME[cls.__COUNTER_THREADS].Put(task,*args)
+	def CreateFrameThreadTask(cls, task: Callable[[dict], None], arg: dict) -> None:
+		cls.__THREADS_IN_FRAME[cls.__COUNTER_THREADS].Put(task,arg)
 		cls.__COUNTER_THREADS = (cls.__COUNTER_THREADS+1)%cls.__MAX_THREADS
 
 
 	@classmethod
-	def CreateFrameProcessTask(cls, task: Callable[[Any], None], *args) -> None:
-		cls.__PROCESSES_IN_FRAME[cls.__COUNTER_PROCESSES].Put(task,*args)
+	def CreateFrameProcessTask(cls, task: Callable[[dict], None], arg: dict) -> None:
+		cls.__PROCESSES_IN_FRAME[cls.__COUNTER_PROCESSES].Put(task,arg)
 		cls.__COUNTER_PROCESSES = (cls.__COUNTER_PROCESSES+1)%cls.__MAX_PROCESSES
 
 
 class FlowControl:
 
 	@classmethod
-	def CreateFrameThreadTask(cls, task: Callable[[Any], None], *args) -> None:
-		FlowControlSystem.CreateFrameThreadTask(task, *args)
+	def CreateFrameThreadTask(cls, task: Callable[[dict], None], arg: dict) -> None:
+		FlowControlSystem.CreateFrameThreadTask(task, arg)
 
 	@classmethod
-	def CreateFrameProcessTask(cls, task: Callable[[Any], None], *args) -> None:
-		FlowControlSystem.CreateFrameProcessTask(task, *args)
+	def CreateFrameProcessTask(cls, task: Callable[[dict], None], arg: dict) -> None:
+		FlowControlSystem.CreateFrameProcessTask(task, arg)

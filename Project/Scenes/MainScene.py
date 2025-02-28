@@ -1,12 +1,16 @@
 from engine import *
+from ..settings import ASSETS_PATH
+
+
 
 class MainScene(Scene):
 
 
 	def Load(self) -> None:
-		self.shader = Shader().LoadToRam({
-			"path": 'FRAGMENT_SHADER'
-		})
+
+		self.mesh = Mesh().LoadToRamFromPath(
+			rf"{ASSETS_PATH}\Models\cube.obj", separate= False
+		).LoadToGpu().UnloadRam()
 		pass
 
 
