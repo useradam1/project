@@ -1,3 +1,5 @@
+
+
 from .Shader.CreateShader import CreateShader
 from .Shader.DestroyShader import DestroyShader
 from .Shader.UseShader import UseShader
@@ -5,9 +7,9 @@ from .Shader.UploadShaderData import ShaderData
 from .Shader.UploadShaderData import allowed_types_shader
 
 from .Mesh.CreateMesh import CreateMesh
-from .Mesh.CreateMesh import UpdateInstanceTransformDataMesh
-from .Mesh.CreateMesh import SetInstanceTransformDataMesh
-from .Mesh.CreateMesh import SetInstanceTransformDataLenghtMesh
+# from .Mesh.CreateMesh import UpdateInstanceTransformDataMesh
+# from .Mesh.CreateMesh import SetInstanceTransformDataMesh
+# from .Mesh.CreateMesh import SetInstanceTransformDataLenghtMesh
 from .Mesh.CreateMesh import DestroyMesh
 from .Mesh.DrawMesh import DrawMesh
 from .Mesh.DrawMesh import DrawMeshInstanced

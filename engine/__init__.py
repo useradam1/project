@@ -13,4 +13,8 @@ from .SceneObjectsSystem import Scene, GameObject, ComponentManager, Component
 from .SceneObjectsSystem.SceneManager import SceneManager
 
 
-from .GpuResourceSystem import Shader
+from .Loader import Vertex, MeshData
+
+from .GpuResourceSystem import Shader, Mesh
+
+from .AssetsEngineSystem import AssetsEngine

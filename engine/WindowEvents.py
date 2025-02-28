@@ -9,12 +9,16 @@ from .SceneObjectsSystem import SceneManagerSystem
 from .SceneObjectsSystem import ComponentManagerSystem
 
 
+from .AssetsEngineSystem import AssetsEngineSystem
+
+
 def WindowInitialization(window_id: int) -> None:
 	MouseSystem.WindowInitialization(window_id)
 	GpuResourceManagerSystem.WindowInitialization(window_id)
 	UpdateManagerSystem.WindowInitialization(window_id)
 	ComponentManagerSystem.WindowInitialization(window_id)
 	SceneManagerSystem.WindowInitialization(window_id)
+	AssetsEngineSystem.WindowInitialization(window_id)
 
 def WindowFlush(window_id: int) -> None:
 	SceneManagerSystem.WindowFlush(window_id)
@@ -23,6 +27,7 @@ def WindowFlush(window_id: int) -> None:
 	GpuResourceManagerSystem.WindowFlush(window_id)
 
 def WindowTerminate(window_id: int) -> None:
+	AssetsEngineSystem.WindowTerminate(window_id)
 	SceneManagerSystem.WindowTerminate(window_id)
 	ComponentManagerSystem.WindowTerminate(window_id)
 	UpdateManagerSystem.WindowTerminate(window_id)

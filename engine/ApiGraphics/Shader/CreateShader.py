@@ -10,7 +10,7 @@ def CreateShader(paths: Dict[str,Literal['VERTEX_SHADER','GEOMETRY_SHADER','FRAG
 	# Проверяем существование всех файлов шейдеров
 	for path in paths.keys():
 		if not os.path.exists(path):
-			return (nulluint32, f"[ERROR] Path to shader '{path}' does not exist.")
+			return (nulluint32, f"Path to shader '{path}' does not exist.")
 
 	shaders: List[Tuple[uint32, str]] = []
 
@@ -51,4 +51,4 @@ def CreateShader(paths: Dict[str,Literal['VERTEX_SHADER','GEOMETRY_SHADER','FRAG
 	
 	if(shader_program): return (uint32(shader_program), "")
 	glDeleteProgram(shader_program)
-	return (nulluint32, "[ERROR] Something has happened!")
+	return (nulluint32, "Something has happened!")
