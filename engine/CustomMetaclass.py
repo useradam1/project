@@ -32,6 +32,9 @@ class TaskQueue:
 	def add_task(self, func: Callable, *args, **kwargs) -> None:
 		self.__QUEUE.append((func, args, kwargs))
 		self.__IS_EMPTY = False
+	
+	def len(self) -> int:
+		return len(self.__QUEUE)
 
 	def execute_next(self) -> Any:
 		if self.__IS_EMPTY: return None

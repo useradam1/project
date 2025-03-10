@@ -1,6 +1,10 @@
 from OpenGL.GL import *
 from typing import Type
 
+import OpenGL.GL as gl
+def GetVersion() -> str:
+	return f"OpenGL Version: {gl.glGetString(gl.GL_VERSION).decode()}"
+
 def ClearDepthBuffer() -> None:
 	glClear(GL_DEPTH_BUFFER_BIT)
 

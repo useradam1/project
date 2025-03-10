@@ -11,7 +11,7 @@ def main() -> int:
 		title="3DEngine1",
 		size=vec2(500, 300),
 		frame_rate=0,
-		resize=False,
+		resize=True,
 	)
 	SceneManager.RunScene("MainScene")
 
@@ -19,9 +19,9 @@ def main() -> int:
 	# 	title="3DEngine2",
 	# 	size=vec2(500, 300),
 	# 	frame_rate=0,
-	# 	resize=False,
+	# 	resize=True,
 	# )
-	# SceneManager.RunScene("MainScene")
+	#SceneManager.RunScene("MainScene")
 
 	StartEngine()
 	return 0

@@ -1,4 +1,4 @@
-from typing import Set, Dict, Callable
+from typing import Set, Dict, Callable, Tuple
 from ..WindowSystem import WindowContextSystem
 
 
@@ -19,7 +19,7 @@ class UpdateManagerSystem:
 	__QUEUE_CHANGE: Dict[int, int] = {}
 	__QUEUE_TO_APPEND: Dict[int, Set[IUpdate]] = {}
 	__QUEUE_TO_REMOVE: Dict[int, Set[IUpdate]] = {}
-	__UPDATES: Dict[int, Dict[int, Set[IUpdate]]] = {}
+	__UPDATES: Dict[int, Tuple[Set[IUpdate],Set[IUpdate]]] = {}
 
 	__TIME: Dict[int, float] = {}
 	__DELTA_TIME: Dict[int, float] = {}
@@ -31,7 +31,7 @@ class UpdateManagerSystem:
 		cls.__QUEUE_CHANGE[window_id] = 0
 		cls.__QUEUE_TO_APPEND[window_id] = set()
 		cls.__QUEUE_TO_REMOVE[window_id] = set()
-		cls.__UPDATES[window_id] = {}
+		cls.__UPDATES[window_id] = (set(),set())
 
 		cls.__TIME[window_id] = 0.0
 		cls.__DELTA_TIME[window_id] = 0.0
@@ -42,8 +42,7 @@ class UpdateManagerSystem:
 		u = cls.__UPDATES[window_id]
 		cls.__CheckQueueChange(window_id, u)
 		for queue in u:
-			for update in u[queue]: update.destroy()
-		u.clear()
+			for update in queue: update.destroy()
 		cls.__ENABLE_QUEUE_UPDATES[window_id] = True
 
 	@classmethod
@@ -53,7 +52,7 @@ class UpdateManagerSystem:
 		cls.__CheckQueueChange(window_id, u)
 
 		for queue in u:
-			for update in u[queue]: update.destroy()
+			for update in queue: update.destroy()
 
 		cls.__ENABLE_QUEUE_UPDATES.pop(window_id, None)
 		cls.__QUEUE_CHANGE.pop(window_id, None)
@@ -85,7 +84,7 @@ class UpdateManagerSystem:
 
 
 	@classmethod
-	def __CheckQueueChange(cls, window_id: int, u: Dict[int, Set[IUpdate]]) -> None:
+	def __CheckQueueChange(cls, window_id: int, u: Tuple[Set[IUpdate],Set[IUpdate]]) -> None:
 		if(not cls.__QUEUE_CHANGE[window_id]): return
 		cls.__QUEUE_CHANGE[window_id] = 0
 
@@ -93,7 +92,6 @@ class UpdateManagerSystem:
 
 		ap = cls.__QUEUE_TO_APPEND[window_id]
 		for update in ap:
-			if(update.queue not in u): u[update.queue] = set()
 			u[update.queue].add(update)
 		ap.clear()
 
@@ -112,7 +110,7 @@ class UpdateManagerSystem:
 		cls.__CheckQueueChange(window_id, u)
 
 		for queue in u:
-			for update in u[queue]: update.tick(dt)
+			for update in queue: update.tick(dt)
 
 
 	@classmethod

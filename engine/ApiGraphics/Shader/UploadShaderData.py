@@ -33,6 +33,8 @@ class ShaderAttributes:
 	size: int
 	typed: allowed_types_shader
 
+nullshaderattributes = ShaderAttributes(-1,0,None)
+nullshaderuniform = ShaderUniform(-1,0,None)
 nullvec2 = (0.0,0.0)
 nullvec3 = (0.0,0.0,0.0)
 nullvec4 = (0.0,0.0,0.0,0.0)
@@ -57,17 +59,17 @@ nulltexid = int32(0)
 
 class ShaderData:
 
-	ATTRIBUTES: Dict[str,ShaderAttributes]
-	UNIFORMS: Dict[str,ShaderUniform]
-	TEXTURE_ID: int
+	__ATTRIBUTES: Dict[str,ShaderAttributes]
+	__UNIFORMS: Dict[str,ShaderUniform]
+	__TEXTURE_ID: int
 	__SHADER_DATA_CLEAR: Dict[allowed_types_shader,Callable[[str],bool]]
 
 
 
 	def __init__(self) -> None:
-		self.ATTRIBUTES = {}
-		self.UNIFORMS = {}
-		self.TEXTURE_ID = 0
+		self.__ATTRIBUTES = {}
+		self.__UNIFORMS = {}
+		self.__TEXTURE_ID = 0
 
 		self.__SHADER_DATA_CLEAR={
 			'Texture3D':self.SetUniformTexture3D_zeros,
@@ -85,76 +87,76 @@ class ShaderData:
 	
 	def UploadShader(self, shader_target_id: uint32):
 		if(shader_target_id==nulluint32): return
-		self.TEXTURE_ID = 0
-		self.ATTRIBUTES.clear()
+		self.__TEXTURE_ID = 0
+		self.__ATTRIBUTES.clear()
 		attrib_count = glGetProgramiv(shader_target_id, GL_ACTIVE_ATTRIBUTES)
 		for i in range(attrib_count):
 			name, size, type_data = glGetActiveAttrib(shader_target_id, i)
 			location = glGetAttribLocation(shader_target_id, name)
 			if location != -1:
-				self.ATTRIBUTES[name.decode("utf-8").replace("[0]","")] = ShaderAttributes(location, size, get_type_name(type_data))
+				self.__ATTRIBUTES[name.decode("utf-8").replace("[0]","")] = ShaderAttributes(location, size, get_type_name(type_data))
 			del name, size, type_data, location
 		del attrib_count
 
-		self.UNIFORMS.clear()
+		self.__UNIFORMS.clear()
 		uniform_count = glGetProgramiv(shader_target_id, GL_ACTIVE_UNIFORMS)
 		for i in range(uniform_count):
 			name, size, type_data = glGetActiveUniform(shader_target_id, i)
 			location = glGetUniformLocation(shader_target_id, name)
 			if location != -1:
-				self.UNIFORMS[name.decode("utf-8").replace("[0]","")] = ShaderUniform(location,size,get_type_name(type_data))
+				self.__UNIFORMS[name.decode("utf-8").replace("[0]","")] = ShaderUniform(location,size,get_type_name(type_data))
 			del name, size, type_data, location
 		del uniform_count
 
 	def ClearShader(self):
-		self.ATTRIBUTES.clear()
-		self.UNIFORMS.clear()
-		self.TEXTURE_ID = 0
+		self.__ATTRIBUTES.clear()
+		self.__UNIFORMS.clear()
+		self.__TEXTURE_ID = 0
 	
 	def ClearTextureId(self):
-		self.TEXTURE_ID = 0
+		self.__TEXTURE_ID = 0
 
 	def ClearUniform(self, nameValue:str):
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed): self.__SHADER_DATA_CLEAR[uniform.typed](nameValue)
 
 
 	def SetUniformTexture3D_one(self, nameValue: str, value: uint32) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if (uniform.typed != 'Texture3D'): return False
-		glActiveTexture(GL_TEXTURE0 + self.TEXTURE_ID)
+		glActiveTexture(GL_TEXTURE0 + self.__TEXTURE_ID)
 		glBindTexture(GL_TEXTURE_3D, value)
-		glUniform1i(uniform.location, self.TEXTURE_ID)
-		self.TEXTURE_ID += 1
+		glUniform1i(uniform.location, self.__TEXTURE_ID)
+		self.__TEXTURE_ID += 1
 		del uniform
 		return True
 	def SetUniformTexture3D_many(self, nameValue: str, value: List[uint32]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if (uniform.typed != 'Texture3D'): return False
 		lenv = len(value)
 		textures: List[int] = []
-		lastsTexId = self.TEXTURE_ID
+		lastsTexId = self.__TEXTURE_ID
 		flattened: List[uint32]
 		if (lenv == uniform.size): 
 			flattened = value
 		else: 
 			flattened = [(value[sublist] if (lenv > sublist) else nulluint32) for sublist in range(uniform.size)]
 		for tex in flattened:
-			glActiveTexture(GL_TEXTURE0 + self.TEXTURE_ID)
+			glActiveTexture(GL_TEXTURE0 + self.__TEXTURE_ID)
 			glBindTexture(GL_TEXTURE_3D, tex)
-			textures.append(self.TEXTURE_ID)
-			self.TEXTURE_ID += 1
+			textures.append(self.__TEXTURE_ID)
+			self.__TEXTURE_ID += 1
 		glUniform1iv(uniform.location, uniform.size, textures)
 		del uniform, lastsTexId, textures, flattened
 		return True
 	def SetUniformTexture3D_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if (uniform.typed != 'Texture3D'): return False
-		lastsTexId = self.TEXTURE_ID
+		lastsTexId = self.__TEXTURE_ID
 		for _ in range(uniform.size):
-			glActiveTexture(GL_TEXTURE0 + self.TEXTURE_ID)
+			glActiveTexture(GL_TEXTURE0 + self.__TEXTURE_ID)
 			glBindTexture(GL_TEXTURE_3D, nulluint32)
-			self.TEXTURE_ID += 1
+			self.__TEXTURE_ID += 1
 		textures = [i + lastsTexId for i in range(uniform.size)]
 		glUniform1iv(uniform.location, uniform.size, textures)
 		del uniform, lastsTexId, textures
@@ -162,39 +164,39 @@ class ShaderData:
 
 
 	def SetUniformTexture2D_one(self, nameValue: str, value: uint32) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'Texture2D'): return False
-		glActiveTexture(GL_TEXTURE0 + self.TEXTURE_ID)
+		glActiveTexture(GL_TEXTURE0 + self.__TEXTURE_ID)
 		glBindTexture(GL_TEXTURE_2D, value)
-		glUniform1i(uniform.location, self.TEXTURE_ID)
-		self.TEXTURE_ID+=1
+		glUniform1i(uniform.location, self.__TEXTURE_ID)
+		self.__TEXTURE_ID+=1
 		del uniform
 		return True
 	def SetUniformTexture2D_many(self, nameValue: str, value: List[uint32]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'Texture2D'): return False
 		lenv = len(value)
 		textures: List[int] = []
-		lastsTexId = self.TEXTURE_ID
+		lastsTexId = self.__TEXTURE_ID
 		flattened: List[uint32]
 		if(lenv == uniform.size): flattened = value
 		else: flattened = [(value[sublist] if(lenv>sublist) else nulluint32) for sublist in range(uniform.size)]
 		for tex in flattened:
-			glActiveTexture(GL_TEXTURE0 + self.TEXTURE_ID)
+			glActiveTexture(GL_TEXTURE0 + self.__TEXTURE_ID)
 			glBindTexture(GL_TEXTURE_2D, value[tex])
-			textures.append(self.TEXTURE_ID)
-			self.TEXTURE_ID+=1
+			textures.append(self.__TEXTURE_ID)
+			self.__TEXTURE_ID+=1
 		glUniform1iv(uniform.location, uniform.size, textures)
 		del uniform, lastsTexId, textures, flattened
 		return True
 	def SetUniformTexture2D_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'Texture2D'): return False
-		lastsTexId = self.TEXTURE_ID
+		lastsTexId = self.__TEXTURE_ID
 		for _ in range(uniform.size):
-			glActiveTexture(GL_TEXTURE0 + self.TEXTURE_ID)
+			glActiveTexture(GL_TEXTURE0 + self.__TEXTURE_ID)
 			glBindTexture(GL_TEXTURE_2D, nulluint32)
-			self.TEXTURE_ID+=1
+			self.__TEXTURE_ID+=1
 		textures = [i+lastsTexId for i in range(uniform.size)]
 		glUniform1iv(uniform.location, uniform.size, textures)
 		del uniform, lastsTexId, textures
@@ -202,13 +204,13 @@ class ShaderData:
 
 
 	def SetUniformInt_one(self, nameValue: str, value: int) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'int'): return False
 		glUniform1i(uniform.location, value)
 		del uniform
 		return True
 	def SetUniformInt_many(self, nameValue: str, value: List[int]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'int'): return False
 		lenv = len(value)
 		flattened: List[int]
@@ -218,7 +220,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformInt_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'int'): return False
 		glUniform1iv(uniform.location, uniform.size, [0]*uniform.size)
 		del uniform
@@ -226,13 +228,13 @@ class ShaderData:
 
 
 	def SetUniformBool_one(self, nameValue: str, value: bool) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'bool'): return False
 		glUniform1i(uniform.location, value)
 		del uniform
 		return True
 	def SetUniformBool_many(self, nameValue: str, value: List[bool]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'bool'): return False
 		lenv = len(value)
 		flattened: List[bool]
@@ -242,7 +244,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformBool_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'bool'): return False
 		glUniform1iv(uniform.location, uniform.size, [0]*uniform.size)
 		del uniform
@@ -250,13 +252,13 @@ class ShaderData:
 
 
 	def SetUniformFloat_one(self, nameValue: str, value: float) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'float'): return False
 		glUniform1f(uniform.location, value)
 		del uniform
 		return True
 	def SetUniformFloat_many(self, nameValue: str, value: List[float]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'float'): return False
 		lenv = len(value)
 		flattened: List[float]
@@ -266,7 +268,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformFloat_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'float'): return False
 		glUniform1fv(uniform.location, uniform.size, [0.0]*uniform.size)
 		del uniform
@@ -274,13 +276,13 @@ class ShaderData:
 
 
 	def SetUniformVec2f_one(self, nameValue: str, value: Tuple[float,float]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec2'): return False
 		glUniform2fv(uniform.location, uniform.size, value)
 		del uniform
 		return True
 	def SetUniformVec2f_many(self, nameValue: str, value: List[Tuple[float,float]]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec2'): return False
 		lenv = len(value)
 		flattened: List[float]
@@ -290,7 +292,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformVec2f_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec2'): return False
 		glUniform2fv(uniform.location, uniform.size, nullvec2*uniform.size)
 		del uniform
@@ -298,13 +300,13 @@ class ShaderData:
 
 
 	def SetUniformVec3f_one(self, nameValue: str, value: Tuple[float,float,float]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec3'): return False
 		glUniform3fv(uniform.location, uniform.size, value)
 		del uniform
 		return True
 	def SetUniformVec3f_many(self, nameValue: str, value: List[Tuple[float,float,float]]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec3'): return False
 		lenv = len(value)
 		flattened: List[float]
@@ -314,7 +316,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformVec3f_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec3'): return False
 		glUniform3fv(uniform.location, uniform.size, nullvec3*uniform.size)
 		del uniform
@@ -322,13 +324,13 @@ class ShaderData:
 
 
 	def SetUniformVec4f_one(self, nameValue: str, value: Tuple[float,float,float,float]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec4'): return False
 		glUniform4fv(uniform.location, uniform.size, value)
 		del uniform
 		return True
 	def SetUniformVec4f_many(self, nameValue: str, value: List[Tuple[float,float,float,float]]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec4'): return False
 		lenv = len(value)
 		flattened: List[float]
@@ -338,7 +340,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformVec4f_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'vec4'): return False
 		glUniform4fv(uniform.location, uniform.size, nullvec4*uniform.size)
 		del uniform
@@ -346,13 +348,13 @@ class ShaderData:
 
 
 	def SetUniformMat2f_one(self, nameValue: str, value: Tuple[float,float,float,float]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat2'): return False
 		glUniformMatrix2fv(uniform.location, uniform.size, GL_FALSE, value)
 		del uniform
 		return True
 	def SetUniformMat2f_many(self, nameValue: str, value: List[Tuple[float,float,float,float]]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat2'): return False
 		lenv = len(value)
 		flattened: List[float]
@@ -362,7 +364,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformMat2f_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat2'): return False
 		glUniformMatrix2fv(uniform.location, uniform.size, GL_FALSE, nullmat2*uniform.size)
 		del uniform
@@ -370,13 +372,13 @@ class ShaderData:
 
 
 	def SetUniformMat3f_one(self, nameValue: str, value: Tuple[float,float,float,float,float,float,float,float,float]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat3'): return False
 		glUniformMatrix3fv(uniform.location, uniform.size, GL_FALSE, value)
 		del uniform
 		return True
 	def SetUniformMat3f_many(self, nameValue: str, value: List[Tuple[float,float,float,float,float,float,float,float,float]]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat3'): return False
 		lenv = len(value)
 		flattened: List[float]
@@ -386,7 +388,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformMat3f_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat3'): return False
 		glUniformMatrix3fv(uniform.location, uniform.size, GL_FALSE, nullmat3*uniform.size)
 		del uniform
@@ -394,13 +396,13 @@ class ShaderData:
 
 
 	def SetUniformMat4f_one(self, nameValue: str, value: Tuple[float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat4'): return False
 		glUniformMatrix4fv(uniform.location, uniform.size, GL_FALSE, value)
 		del uniform
 		return True
 	def SetUniformMat4f_many(self, nameValue: str, value: List[Tuple[float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float]]) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat4'): return False
 		lenv = len(value)
 		flattened: List[float]
@@ -410,7 +412,7 @@ class ShaderData:
 		del uniform, flattened, lenv
 		return True
 	def SetUniformMat4f_zeros(self, nameValue: str) -> bool:
-		uniform = self.UNIFORMS[nameValue]
+		uniform = self.__UNIFORMS.get(nameValue, nullshaderuniform)
 		if(uniform.typed != 'mat4'): return False
 		glUniformMatrix4fv(uniform.location, uniform.size, GL_FALSE, nullmat4*uniform.size)
 		del uniform

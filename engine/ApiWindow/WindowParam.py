@@ -2,7 +2,6 @@ import glfw
 import ctypes
 from typing import Type, Optional
 from glfw.GLFW import glfwGetTime
-
 window_type = Type[ctypes.POINTER(glfw._GLFWwindow)]
 
 

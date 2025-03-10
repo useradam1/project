@@ -8,15 +8,19 @@ emptyset = set()
 
 
 
-from dataclasses import dataclass
 
-@dataclass(frozen=True)
 class IGameObject:
 	gameObject: GameObjectInterface
 	id: int
 	getName: Callable[[], str]
 	getTag: Callable[[], str]
 	destroy: Callable[[], None]
+	def __init__(self, gameObject: GameObjectInterface, id: int, getName: Callable[[], str], getTag: Callable[[], str], destroy: Callable[[], None]) -> None:
+		self.gameObject = gameObject
+		self.id = id
+		self.getName = getName
+		self.getTag = getTag
+		self.destroy = destroy
 
 
 class SceneManagerSystem:

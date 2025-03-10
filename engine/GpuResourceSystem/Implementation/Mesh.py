@@ -30,23 +30,21 @@ class Mesh:
 	__ID: int
 	__STATUS_EXIST: bool
 	__TASK_QUEUE: TaskQueue
-	__OBJECT: GpuMeshInstanced
 	__LOAD_STATUS_GPU: bool
-	__UPDATE: Update
 	__THREAD_LOAD_RAM: ThreadLoad
 
 	__WINDOW_ID: int
 	__IGPU_RESOURCE: IGpuResource
+
+	__OBJECT: GpuMeshInstanced
+	__UPDATE: Update
 
 
 	def __init__(self) -> None:
 		self.__ID = id(self)
 		self.__STATUS_EXIST = False
 		self.__TASK_QUEUE = TaskQueue()
-		self.__OBJECT = GpuMeshInstanced(nulluint32,nulluint32,nulluint32,nulluint32,nulluint32,0)
 		self.__LOAD_STATUS_GPU = False
-		self.__UPDATE = Update(self.__CheckQueue)
-		self.__UPDATE.enabled = False
 		self.__THREAD_LOAD_RAM = ThreadLoad(
 			ready= True,
 			path= "",
@@ -66,6 +64,11 @@ class Mesh:
 			del self.__IGPU_RESOURCE
 			PrintLog(f"{self.__class__.__name__} registration denied", color= LogColors.RED)
 			return
+
+		self.__OBJECT = GpuMeshInstanced(nulluint32,nulluint32,nulluint32,nulluint32,nulluint32,0)
+
+		self.__UPDATE = Update(self.__checkQueue)
+		self.__UPDATE.enabled = False
 
 		self.__STATUS_EXIST = True
 		PrintLog(f"{self.__class__.__name__} Initialization", color= LogColors.GREEN)
@@ -96,6 +99,12 @@ class Mesh:
 	def GetLoadStatusGpu(self) -> bool:
 		return self.__LOAD_STATUS_GPU
 
+	def GetMeshesData(self) -> List[MeshData]:
+		return self.__THREAD_LOAD_RAM['meshes']
+
+	def GetErrorLog(self) -> str:
+		return self.__THREAD_LOAD_RAM['error_log']
+
 	def GetStatusThreadActive(self) -> bool:
 		return not self.__THREAD_LOAD_RAM['ready']
 
@@ -116,16 +125,16 @@ class Mesh:
 
 
 
-	def __loadToRamFromMeshData(self, data: List[MeshData]) -> None:
+	def __loadToRamFromMeshesData(self, data: List[MeshData]) -> None:
 		self.__THREAD_LOAD_RAM['meshes'] = data
 		self.__THREAD_LOAD_RAM['error_log'] = ""
 		self.__THREAD_LOAD_RAM['ready'] = True
 
-	def LoadToRamFromMeshData(self, data: List[MeshData]) -> 'Mesh':
+	def LoadToRamFromMeshesData(self, data: List[MeshData]) -> 'Mesh':
 		if(not self.__THREAD_LOAD_RAM['ready']):
-			self.__TASK_QUEUE.add_task(self.__loadToRamFromMeshData, data)
+			self.__TASK_QUEUE.add_task(self.__loadToRamFromMeshesData, data)
 			self.__UPDATE.enabled = True
-		else: self.__loadToRamFromMeshData(data)
+		else: self.__loadToRamFromMeshesData(data)
 		return self
 
 
@@ -133,6 +142,7 @@ class Mesh:
 	def __unloadRam(self) -> None:
 		self.__THREAD_LOAD_RAM['meshes'] = []
 		self.__THREAD_LOAD_RAM['error_log'] = ""
+		self.__THREAD_LOAD_RAM['ready'] = True
 		PrintLog(f"{self.__class__.__name__} Unload from the RAM memory is completed", LogColors.GREEN)
 
 	def UnloadRam(self) -> 'Mesh':
@@ -209,7 +219,7 @@ class Mesh:
 
 
 
-	def __CheckQueue(self) -> None:
+	def __checkQueue(self) -> None:
 		if(self.__THREAD_LOAD_RAM['ready']): self.__TASK_QUEUE.execute_next()
 		if(self.__TASK_QUEUE.is_empty()):
 			self.__UPDATE.enabled = False
