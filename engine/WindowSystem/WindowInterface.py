@@ -6,6 +6,20 @@ from ..Math import vec2
 
 class WindowInterface(ABC):
 
+
+	@abstractmethod	
+	def AppendCallbackSize(self, func: Callable[[int,int], None]) -> None: ...
+
+	@abstractmethod	
+	def RemoveCallbackSize(self, func: Callable[[int,int], None]) -> None: ...
+
+	@abstractmethod	
+	def AppendCallbackPosition(self, func: Callable[[int,int], None]) -> None: ...
+
+	@abstractmethod	
+	def RemoveCallbackPosition(self, func: Callable[[int,int], None]) -> None: ...
+
+
 	@abstractmethod
 	def Destroy(self) -> None: ...
 
@@ -52,7 +66,6 @@ class WindowInterface(ABC):
 
 	@abstractmethod	
 	def GetCurrentFrameRate(self) -> float: ...
-
 
 
 

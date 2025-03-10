@@ -6,8 +6,8 @@ from typing import List, Callable
 
 class FlowControlSystem:
 
-	__MAX_THREADS: int = 16
-	__MAX_PROCESSES: int = 8
+	__MAX_THREADS: int = 8
+	__MAX_PROCESSES: int = 4
 	__COUNTER_THREADS: int = 0
 	__COUNTER_PROCESSES: int = 0
 	__THREADS_IN_FRAME: List[ThreadTask] = []

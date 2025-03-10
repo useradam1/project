@@ -6,7 +6,8 @@ from ..Math import vec2, vec2_ptr_static, vec4
 from ..ApiWindow import window_type, CreateWindow, DestroyWindow, WindowShouldClose, GetCurrentTime, GetWindowPosition
 from ..ApiWindow import SetWindowTitle, SetSwapInterval, SetWindowPosition, SetWindowResize, SetWindowSize
 from ..ApiWindow import SetCallbackWindowFocus, SetCallbackWindowSize, SetCallbackWindowPosition
-from typing import Optional
+from ..CustomMetaclass import TaskQueue
+from typing import Optional, Set, Callable
 from ..Profiler import Profiler
 
 from ..Log import LogColors, PrintLog
@@ -28,6 +29,9 @@ class Window(WindowInterface):
 	__RESIZE: bool
 
 	__IN_FOCUS: int
+	__CALLBACKS: TaskQueue
+	__CALLBACK_SIZE: Set[Callable[[int,int],None]]
+	__CALLBACK_POSITION: Set[Callable[[int,int],None]]
 
 	__IWINDOW: IWindow
 	__WINDOW_OBJECT: Optional[window_type]
@@ -56,12 +60,12 @@ class Window(WindowInterface):
 		self.__RESIZE = resize
 
 		self.__IN_FOCUS = 0
+		self.__CALLBACKS = TaskQueue()
+		self.__CALLBACK_SIZE = set()
+		self.__CALLBACK_POSITION = set()
 
 		self.__WINDOW_OBJECT = None
 		self.__IWINDOW = IWindow(self.__Tick, self.__ImmediateDestroy)
-		# self.__IWINDOW = IWindow()
-		# self.__IWINDOW.tick = self.__Tick
-		# self.__IWINDOW.destroy = self.__ImmediateDestroy
 
 		if(not WindowManagerSystem.AppendWindow(self.__IWINDOW)):
 			del self.__IWINDOW
@@ -102,6 +106,8 @@ class Window(WindowInterface):
 		if(self.__STATUS_EXIST):
 			push_context_window = WindowContextSystem.GetCurrentWindow()
 			WindowContextSystem.SetCurrentWindow(self)
+			for _ in range(self.__CALLBACKS.len()):
+				self.__CALLBACKS.execute_next()
 			WindowTerminate(self.__ID)
 			SetCallbackWindowSize(self.__WINDOW_OBJECT, None) # type: ignore
 			SetCallbackWindowFocus(self.__WINDOW_OBJECT, None) # type: ignore
@@ -109,6 +115,8 @@ class Window(WindowInterface):
 			WindowManagerSystem.RemoveWindow(self.__IWINDOW)
 			WindowContextSystem.SetCurrentWindow(push_context_window)
 			DestroyWindow(self.__WINDOW_OBJECT) # type: ignore
+			self.__CALLBACK_SIZE.clear()
+			self.__CALLBACK_POSITION.clear()
 			self.__SIZE_OUTPUT.Unlink()
 			self.__POSITION_OUTPUT.Unlink()
 			self.__WINDOW_OBJECT = None
@@ -124,10 +132,49 @@ class Window(WindowInterface):
 	def __CallbackSize(self, window: window_type, width: int, height: int) -> None:
 		self.__SIZE.x = width
 		self.__SIZE.y = height
+		for func in self.__CALLBACK_SIZE:
+			self.__CALLBACKS.add_task(func, width, height)
 
 	def __CallbackPosition(self, window: window_type, x: int, y: int) -> None:
 		self.__POSITION.x = x
 		self.__POSITION.y = y
+		for func in self.__CALLBACK_POSITION:
+			self.__CALLBACKS.add_task(func, x, y)
+
+
+
+	def AppendCallbackSize(self, func: Callable[[int, int], None]) -> None:
+		self.__CALLBACK_SIZE.add(func)
+
+	def RemoveCallbackSize(self, func: Callable[[int, int], None]) -> None:
+		self.__CALLBACK_SIZE.remove(func)
+
+	def AppendCallbackPosition(self, func: Callable[[int, int], None]) -> None:
+		self.__CALLBACK_POSITION.add(func)
+
+	def RemoveCallbackPosition(self, func: Callable[[int, int], None]) -> None:
+		self.__CALLBACK_POSITION.remove(func)
+
+	def GetSize(self) -> vec2:
+		return self.__SIZE_OUTPUT
+	def SetSize(self, width: int, height: int) -> None:
+		if(self.__STATUS_EXIST):
+			self.__SIZE.x = width
+			self.__SIZE.y = height
+			SetWindowSize(self.__WINDOW_OBJECT, width, height) # type: ignore
+			for func in self.__CALLBACK_SIZE:
+				self.__CALLBACKS.add_task(func, width, height)
+
+	def GetPosition(self) -> vec2:
+		return self.__POSITION_OUTPUT
+	def SetPosition(self, x: int, y: int) -> None:
+		if(self.__STATUS_EXIST):
+			self.__POSITION.x = x
+			self.__POSITION.y = y
+			SetWindowPosition(self.__WINDOW_OBJECT, x, y) # type: ignore
+			for func in self.__CALLBACK_POSITION:
+				self.__CALLBACKS.add_task(func, x, y)
+
 
 
 	def GetId(self) -> int:
@@ -159,21 +206,6 @@ class Window(WindowInterface):
 			self.__TITLE = title
 			SetWindowTitle(self.__WINDOW_OBJECT, title) # type: ignore
 
-	def GetSize(self) -> vec2:
-		return self.__SIZE_OUTPUT
-	def SetSize(self, width: int, height: int) -> None:
-		if(self.__STATUS_EXIST):
-			self.__SIZE.x = width
-			self.__SIZE.y = height
-			SetWindowSize(self.__WINDOW_OBJECT, width, height) # type: ignore
-
-	def GetPosition(self) -> vec2:
-		return self.__POSITION_OUTPUT
-	def SetPosition(self, x: int, y: int) -> None:
-		if(self.__STATUS_EXIST):
-			self.__POSITION.x = x
-			self.__POSITION.y = y
-			SetWindowPosition(self.__WINDOW_OBJECT, x, y) # type: ignore
 
 	def GetFrameRate(self) -> int:
 		return self.__FRAME_RATE
@@ -193,6 +225,9 @@ class Window(WindowInterface):
 		time = GetCurrentTime()
 		if(time < self.__FRAME_RATE_CONTROL.w): return
 		WindowContextSystem.SetCurrentWindow(self)
+
+		for _ in range(self.__CALLBACKS.len()):
+			self.__CALLBACKS.execute_next()
 
 
 

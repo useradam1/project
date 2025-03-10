@@ -1,7 +1,9 @@
 from ..GpuResourceSystem import GpuResourceManagerSystem, IGpuResource
 from ...WindowSystem import WindowContextSystem
-from ...ApiGraphics import CreateShader, DestroyShader, UseShader, ShaderData
-from typing import Dict, Literal
+from ...ApiGraphics import CreateShader, DestroyShader, UseShader, ShaderData, allowed_types_shader
+from .ShaderInterface import ShaderInterface
+from .ShaderContext import ShaderContext
+from typing import Dict, Literal, Tuple
 from numpy import uint32
 
 nulluint32 = uint32(0)
@@ -12,13 +14,14 @@ from ...Log import LogColors, PrintLog
 
 
 
-class Shader:
+class Shader(ShaderInterface):
 
 	__ID: int
 	__STATUS_EXIST: bool
 	__OBJECT: uint32
 	__LOAD_STATUS_GPU: bool
 	__SHADER_DATA: ShaderData
+	__MATERIAL: Tuple[int, Dict[str, allowed_types_shader]]
 
 
 	__WINDOW_ID: int
@@ -31,6 +34,7 @@ class Shader:
 		self.__OBJECT = nulluint32
 		self.__LOAD_STATUS_GPU = False
 		self.__SHADER_DATA = ShaderData()
+		self.__MATERIAL = (-1, {})
 
 		self.__WINDOW_ID = WindowContextSystem.GetCurrentWindowId()
 		if(not self.__WINDOW_ID):
@@ -43,6 +47,7 @@ class Shader:
 			del self.__IGPU_RESOURCE
 			PrintLog(f"{self.__class__.__name__} registration denied", color= LogColors.RED)
 			return
+
 
 		self.__STATUS_EXIST = True
 		PrintLog(f"{self.__class__.__name__} Initialization", color= LogColors.GREEN)
@@ -71,7 +76,7 @@ class Shader:
 
 	def GetLoadStatusGpu(self) -> bool:
 		return self.__LOAD_STATUS_GPU
-	
+
 	def GetShaderData(self) -> ShaderData:
 		return self.__SHADER_DATA
 
@@ -79,7 +84,7 @@ class Shader:
 
 	def LoadToGpu(self, value: Dict[str, Literal['VERTEX_SHADER','GEOMETRY_SHADER','FRAGMENT_SHADER']]) -> 'Shader':
 		self.UnloadGpu()
-		self.__OBJECT, error_log = CreateShader(value)
+		self.__OBJECT, self.__MATERIAL, error_log = CreateShader(value)
 		if(error_log): PrintLog(f"[ERROR_{self.__class__.__name__}] {error_log}", LogColors.RED)
 		else:
 			self.__SHADER_DATA.UploadShader(self.__OBJECT)
@@ -89,8 +94,10 @@ class Shader:
 
 	def UnloadGpu(self) -> 'Shader':
 		if(self.__LOAD_STATUS_GPU):
+			self.StopUseProgram()
 			DestroyShader(self.__OBJECT)
 			self.__OBJECT = nulluint32
+			self.__MATERIAL = (-1, {})
 			self.__SHADER_DATA.ClearShader()
 			self.__LOAD_STATUS_GPU = False
 			PrintLog(f"{self.__class__.__name__} Unload from the GPU memory is completed", LogColors.GREEN)
@@ -98,7 +105,18 @@ class Shader:
 
 
 
-	def UseProgram(self) -> 'Shader':
+	def StartUseProgram(self) -> 'Shader':
 		if(self.__LOAD_STATUS_GPU):
-			UseShader(self.__OBJECT)
+			if(ShaderContext.GetShaderId(self.__WINDOW_ID) != self.__ID):
+				UseShader(self.__OBJECT)
+				ShaderContext.SetShader(self.__WINDOW_ID, self)
 		return self
+
+	def StopUseProgram(self) -> 'Shader':
+		UseShader(nulluint32)
+		ShaderContext.SetShader(self.__WINDOW_ID, None)
+		return self
+	
+	
+	def GetMaterialDescriptor(self) -> Tuple[int, Dict[str, allowed_types_shader]]:
+		return self.__MATERIAL

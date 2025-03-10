@@ -15,6 +15,6 @@ from .SceneObjectsSystem.SceneManager import SceneManager
 
 from .Loader import Vertex, MeshData
 
-from .GpuResourceSystem import Shader, Mesh
+from .GpuResourceSystem import Shader, Mesh, Texture2D, FrameBuffer, Material
 
 from .AssetsEngineSystem import AssetsEngine

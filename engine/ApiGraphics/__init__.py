@@ -20,11 +20,20 @@ from .Mesh.ParamMesh import DepthTestModeMesh
 
 from .Texture.CreateTexture import CreateTexture2D, CreateTexture3D
 from .Texture.DestroyTexture import DestroyTexture
-from .Texture.UpdateTexture import UpdateTexture2D, ClearTexture2D
-from .Texture.UpdateTexture import UpdateTexture3D, ClearTexture3D
-from .Texture.UpdateTexture import UpdateTexture2DFloat, ClearTexture2DFloat
-from .Texture.UpdateTexture import UpdateTexture3DFloat, ClearTexture3DFloat
+from .Texture.UpdateTexture import UpdateTexture2D, ClearTexture2D, FillTexture2DWithColor
+from .Texture.UpdateTexture import UpdateTexture3D, ClearTexture3D, FillTexture3DWithColor
+from .Texture.UpdateTexture import UpdateTexture2DFloat, ClearTexture2DFloat, FillTexture2DWithColorFloat
+from .Texture.UpdateTexture import UpdateTexture3DFloat, ClearTexture3DFloat, FillTexture3DWithColorFloat
 
+from .FrameBuffer.CreateFrameBuffer import CreateFrameBuffer, BindFrameBuffer
+from .FrameBuffer.DestroyFrameBuffer import DestroyFrameBuffer
+from .FrameBuffer.SetTextuerFrameBuffer import UpdateSizeFrameBuffer, SetTextures2DFrameBuffer, ClearTextures2DFromFrameBuffer
+
+from .Material.CreateMaterial import CreateMaterialBuffer
+from .Material.UpdateMaterialBuffer import UpdateMaterialBuffer
+from .Material.DestroyMaterial import DestroyMaterialBuffer
+
+from .Settings import GetVersion
 from .Settings import ClearDepthBuffer
 from .Settings import ClearColor
 from .Settings import SetViewport
@@ -34,10 +43,3 @@ from .Settings import BindTexture3D_rgba8
 from .Settings import BindTexture3D_rgba32f
 from .Settings import RenderNOW
 from .Settings import CheckDrawStatus
-
-
-from .FrameBuffer.CreateFrameBuffer import CreateFrameBuffer, BindFrameBuffer
-from .FrameBuffer.DestroyFrameBuffer import DestroyFrameBuffer
-from .FrameBuffer.SetTextuerFrameBuffer import UpdateFrameBuffer
-
-from .FrameBuffer.SetTextuerFrameBuffer import SetTextures2DFrameBuffer

@@ -13,8 +13,7 @@ emptydict = {}
 
 
 
-from dataclasses import dataclass
-@dataclass(frozen=True)
+
 class IComponent:
 	component: ComponentInterface
 	id: int
@@ -22,6 +21,13 @@ class IComponent:
 	initialization: Callable[[IGameObject], None]
 	getGameObjectId: Callable[[], int]
 	destroy: Callable[[], int]
+	def __init__(self, component: ComponentInterface, id: int, name: str, initialization: Callable[[IGameObject], None], getGameObjectId: Callable[[], int], destroy: Callable[[], int]) -> None:
+		self.component = component
+		self.id = id
+		self.name = name
+		self.initialization = initialization
+		self.getGameObjectId = getGameObjectId
+		self.destroy = destroy
 
 
 class ComponentManagerSystem:
