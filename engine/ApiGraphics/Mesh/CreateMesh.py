@@ -36,10 +36,10 @@ def DestroyMesh(mesh: GpuMeshInstanced) -> None:
 	])
 
 def CreateMesh(
-		Vertices:ndarray[Tuple[int, ...],dtype[float32]],
-		Uvs:ndarray[Tuple[int, ...],dtype[float32]],
-		Normals:ndarray[Tuple[int, ...],dtype[float32]],
-		Faces:ndarray[Tuple[int, ...],dtype[int32]]
+		Vertices:ndarray[Tuple[int, int],dtype[float32]],
+		Uvs:ndarray[Tuple[int, int],dtype[float32]],
+		Normals:ndarray[Tuple[int, int],dtype[float32]],
+		Faces:ndarray[Tuple[int, int],dtype[int32]]
 		) -> GpuMeshInstanced:
 
 	# Generate a new vertex array object (VAO)

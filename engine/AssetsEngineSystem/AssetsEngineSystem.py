@@ -14,7 +14,8 @@ from typing import TypedDict, Dict
 class Assets(TypedDict):
 	rtx_shader: Shader
 	standart_shader: Shader
-	texture_desplay_shader: Shader
+	texture_display_shader: Shader
+	final_display_texture: Texture2D
 	white_texture2d: Texture2D
 	missing_texture2d: Texture2D
 	UV_1k_texture: Texture2D
@@ -60,10 +61,11 @@ class AssetsEngineSystem:
 				rf"{ASSETS_PATH}\Shaders\Standart\shader.frag": 'FRAGMENT_SHADER',
 				rf"{ASSETS_PATH}\Shaders\Standart\shader.vert": 'VERTEX_SHADER'
 			}),
-			'texture_desplay_shader': Shader().LoadToGpu({
+			'texture_display_shader': Shader().LoadToGpu({
 				rf"{ASSETS_PATH}\Shaders\TextureShow\shader.frag": 'FRAGMENT_SHADER',
 				rf"{ASSETS_PATH}\Shaders\TextureShow\shader.vert": 'VERTEX_SHADER'
 			}),
+			'final_display_texture': Texture2D(),
 			'white_texture2d': Texture2D().LoadToRamFromData([
 				[(255,255,255,255)]
 			]).LoadToGpu().UnloadRam(),
@@ -75,6 +77,7 @@ class AssetsEngineSystem:
 			'plane_mesh': Mesh().LoadToRamFromMeshesData([plane]).LoadToGpu().UnloadRam(),
 			'error_mesh': Mesh().LoadToRamFromPath(rf"{ASSETS_PATH}\Models\ERROR.obj", False).LoadToGpu().UnloadRam(),
 		}
+		cls.__ASSETS[window_id]['final_display_texture'].Bind(0)
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:

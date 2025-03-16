@@ -12,7 +12,7 @@ class FixedUpdate:
 	__STATUS_EXIST: bool
 
 	__ENABLED: bool
-	__ACTION: Optional[Callable[[], None]]
+	__ACTION: Optional[Callable[[float], None]]
 	__HAS_ACTION: bool
 	__TIME: float
 	__INTERRUPTION_TIME: float
@@ -21,7 +21,7 @@ class FixedUpdate:
 	__IUPDATE: IUpdate
 
 
-	def __init__(self, action: Optional[Callable[[], None]], interruption_time: float) -> None:
+	def __init__(self, action: Optional[Callable[[float], None]], interruption_time: float) -> None:
 		self.__ID = id(self)
 		self.__STATUS_EXIST = False
 
@@ -71,17 +71,17 @@ class FixedUpdate:
 	def GetStatusExist(self) -> bool:
 		return self.__STATUS_EXIST
 
-	def GetAction(self) -> Optional[Callable[[], None]]:
+	def GetAction(self) -> Optional[Callable[[float], None]]:
 		return self.__ACTION
 
-	def SetAction(self, action: Optional[Callable[[], None]]) -> None:
+	def SetAction(self, action: Optional[Callable[[float], None]]) -> None:
 		self.__ACTION = action
 		self.__HAS_ACTION = action is not None
 
 	def GetnterruptionTime(self) -> float:
 		return self.__INTERRUPTION_TIME
 
-	def SetnterruptionTime(self, value: float) -> None:
+	def SetInterruptionTime(self, value: float) -> None:
 		self.__INTERRUPTION_TIME = value
 	
 	def HasAction(self) -> bool:
@@ -98,7 +98,7 @@ class FixedUpdate:
 
 	def __Tick(self, delta_time: float) -> None:
 		if(self.__ENABLED and self.__HAS_ACTION):
-			if(self.__TIME>self.__INTERRUPTION_TIME):
-				self.__ACTION()	# type: ignore
-				self.__TIME = 0.0
 			self.__TIME += delta_time
+			if(self.__TIME>self.__INTERRUPTION_TIME):
+				self.__ACTION(self.__TIME)	# type: ignore
+				self.__TIME = 0.0

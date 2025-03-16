@@ -117,8 +117,8 @@ class Window(WindowInterface):
 			DestroyWindow(self.__WINDOW_OBJECT) # type: ignore
 			self.__CALLBACK_SIZE.clear()
 			self.__CALLBACK_POSITION.clear()
-			self.__SIZE_OUTPUT.Unlink()
-			self.__POSITION_OUTPUT.Unlink()
+			self.__SIZE_OUTPUT.UnlinkVector()
+			self.__POSITION_OUTPUT.UnlinkVector()
 			self.__WINDOW_OBJECT = None
 			del self.__IWINDOW
 			self.__STATUS_EXIST = False

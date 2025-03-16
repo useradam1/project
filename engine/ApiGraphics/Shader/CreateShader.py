@@ -1,7 +1,7 @@
 from .CompileShader import CompileShader
 from .UploadShaderData import allowed_types_shader
 from OpenGL.GL import *
-from typing import Dict, List, Tuple, Literal, Optional
+from typing import Dict, List, Tuple, Literal
 from numpy import uint32
 import os
 import re
@@ -25,7 +25,7 @@ convert_shader_type = {
 	'sampler3D': 'Texture3D'
 }
 
-def extract_material_attributes(shader_code: str) -> dict:
+def extract_material_attributes(shader_code: str) -> Dict[str, Tuple[allowed_types_shader, int]]:
 	# Паттерн для поиска структуры Material
 	struct_pattern = re.compile(
 		r'struct Material\s*\{([^}]*)\}\s*;',  # Ищем содержимое внутри {}
@@ -37,7 +37,7 @@ def extract_material_attributes(shader_code: str) -> dict:
 		return {}
 	
 	content = match.group(1).strip()
-	attributes = {}
+	attributes: Dict[str, Tuple[allowed_types_shader, int]] = {}
 	
 	# Разделяем поля по точкам с запятой
 	for field in re.split(r';\s*', content):
@@ -51,12 +51,16 @@ def extract_material_attributes(shader_code: str) -> dict:
 			# Объединяем все части типа (на случай составных типов)
 			attr_type = convert_shader_type.get(' '.join(parts[:-1]))
 			if(attr_type is None): break
+			attr_size = 1
+			match = re.search(r'\[(\d+)\]', field)
+			if match:
+				attr_size = int(match.group(1))
 			attr_name = parts[-1]
-			attributes[attr_name] = attr_type
+			attributes[attr_name] = (attr_type, attr_size)
 	
 	return attributes
 
-def parse_shader_materials(shader_code: str) -> Tuple[int, Dict[str, allowed_types_shader]]:
+def parse_shader_materials(shader_code: str) -> Tuple[int, Dict[str, Tuple[allowed_types_shader, int]]]:
 	# Ищем блок буфера материалов с указанием binding
 	buffer_regex = r"layout\s*\(.*?binding\s*=\s*(\d+).*?\)\s*buffer\s+Materials\s*{([^}]*)};"
 	buffer_match = re.search(buffer_regex, shader_code, re.DOTALL)
@@ -105,7 +109,7 @@ def PreprocessShader(file_path: str, included_files=None) -> Tuple[str, str]:
 
 
 
-def CreateShader(paths: Dict[str, Literal['VERTEX_SHADER','GEOMETRY_SHADER','FRAGMENT_SHADER']]) -> Tuple[uint32, Tuple[int, Dict[str, allowed_types_shader]], str]:
+def CreateShader(paths: Dict[str, Literal['VERTEX_SHADER','GEOMETRY_SHADER','FRAGMENT_SHADER']]) -> Tuple[uint32, Tuple[int, Dict[str, Tuple[allowed_types_shader, int]]], str]:
 	material = (-1, {})
 	# Проверка существования основных файлов
 	for path in paths.keys():

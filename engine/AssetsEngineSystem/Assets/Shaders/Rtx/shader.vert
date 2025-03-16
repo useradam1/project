@@ -7,13 +7,13 @@ layout(location = 2) in vec3 normal_data;
 
 
 
-out vec4 position_local_screen;
+out vec2 uv;
 
 void main()
 {
-	vec4 vertices = vec4(vertice_data * vec3(-1.0,1.0,1.0),1.0) * vec4(-1,-1,-1,1) * vec4(-1,-1,1,1);
+	vec4 vertices = vec4(vertice_data,1.0);
 
 	gl_Position = vertices;
 
-	position_local_screen = gl_Position;
+	uv = gl_Position.xy;
 }

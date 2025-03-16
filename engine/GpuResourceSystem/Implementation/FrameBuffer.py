@@ -93,5 +93,7 @@ class FrameBuffer:
 
 
 	def UpdateSize(self, width: int, height: int) -> 'FrameBuffer':
+		for texture in self.__REGISTERED_TEXTURES2D:
+			texture.SetEmptyData(width, height).LoadToGpu()
 		UpdateSizeFrameBuffer(self.__RBO, width, height)
 		return self

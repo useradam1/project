@@ -1,49 +1,64 @@
 from .MaterialInterface import MaterialInterface, allowed_type_uniform
 from .Texture2D import Texture2D
-from ...ApiGraphics import allowed_types_shader, CreateMaterialBuffer, UpdateMaterialBuffer, DestroyMaterialBuffer
+from ...ApiGraphics import allowed_types_shader, CreateSSBOBuffer, UpdateSSBOBuffer, DestroySSBOBuffer
 from ...Math import *
 
-from typing import Dict, Set, Tuple
+from typing import Dict, Set, Tuple, Callable, Any, Union
 
 from numpy import dtype, float32, int32, uint32, uint8, ndarray, zeros, delete
 
 
 from ...Log import LogColors, PrintLog
-from ...CustomMetaclass import TaskQueue
 
 
-convertor = {
-	'bool': lambda x: (x, uint32),
-	'int': lambda x: (x, int32),
-	'float': lambda x: (x, float32),
-	'vec2': lambda x: (x, float32, 2),
-	'vec3': lambda x: (x, float32, 3),
-	'vec4': lambda x: (x, float32, 4),
-	'mat2': lambda x: (x, float32, 4),
-	'mat3': lambda x: (x, float32, 9),
-	'mat4': lambda x: (x, float32, 16),
-	'Texture2D': lambda x: x,
-	'Texture3D': lambda x: x,
-	None: None
+convertor: Dict[str, Callable[[str,int], Tuple[str, Union[int32, float32, uint32, Any], Tuple[int, int, int]]]] = {
+	'int': lambda name_str, size_int: (name_str, int32, (size_int, 1, 1)),
+	'float': lambda name_str, size_int: (name_str, float32, (size_int, 1, 1)),
+	'bool': lambda name_str, size_int: (name_str, uint32, (size_int, 1, 1)),
+	'vec2': lambda name_str, size_int: (name_str, float32, (size_int, 1, 2)),
+	'vec3': lambda name_str, size_int: (name_str, float32, (size_int, 1, 4)),
+	'vec4': lambda name_str, size_int: (name_str, float32, (size_int, 1, 4)),
+	'mat2': lambda name_str, size_int: (name_str, float32, (size_int, 1, 8)),
+	'mat3': lambda name_str, size_int: (name_str, float32, (size_int, 1, 12)),
+	'Rotation': lambda name_str, size_int: (name_str, float32, (size_int, 1, 12)),
+	'mat4': lambda name_str, size_int: (name_str, float32, (size_int, 1, 16)),
+	'Texture2D': lambda name_str, size_int: (name_str, uint32, (size_int, 1, 1)),
+	'Texture3D': lambda name_str, size_int: (name_str, uint32, (size_int, 1, 1))
 }
+
 
 
 get_primitive = {
 	'bool': lambda x: x,
 	'int': lambda x: x,
 	'float': lambda x: x,
-	'vec2': lambda x: x.CreateCType(),
-	'vec3': lambda x: x.CreateCType(),
-	'vec4': lambda x: x.CreateCType(),
-	'mat2': lambda x: x.CreateCType(),
-	'mat3': lambda x: x.CreateCType(),
-	'mat4': lambda x: x.CreateCType(),
+	'vec2': lambda x: x.CreateTuple(),
+	'vec3': lambda x: (x[0], x[1], x[2], 0),
+	'vec4': lambda x: x.CreateTuple(),
+	'mat2': lambda x: (
+		x[0], x[1], 0, 0,
+		x[2], x[3], 0, 0,
+	),
+	'mat3': lambda x: (
+		x[0], x[1], x[2], 0,
+		x[3], x[4], x[5], 0,
+		x[6], x[7], x[8], 0
+	),
+	'Rotation': lambda x: (
+		x[0], x[1], x[2], 0,
+		x[3], x[4], x[5], 0,
+		x[6], x[7], x[8], 0
+	),
+	'mat4': lambda x: x.CreateTuple(),
 	'Texture2D': lambda x: x.GetObject(),
 	'Texture3D': lambda x: x,
-	None: None
+	'tuple': lambda x: x,
+	'list': lambda x: x,
 }
 
 
+def UnpuckTuple(data: Tuple[allowed_type_uniform, ...]) -> tuple:
+	return tuple(get_primitive[i.__class__.__name__](i) for i in data)
 
 
 
@@ -130,7 +145,7 @@ class MaterialControllerSystem:
 		cls.__NDARRAY_DATA_MATERIAL[window_id].clear()
 
 		for _, ssbo_id in cls.__SSBO[window_id].items():
-			DestroyMaterialBuffer(ssbo_id)
+			DestroySSBOBuffer(ssbo_id)
 		cls.__SSBO[window_id].clear()
 
 
@@ -162,7 +177,7 @@ class MaterialControllerSystem:
 		cls.__NDARRAY_DATA_MATERIAL.pop(window_id, None)
 
 		for _, ssbo_id in cls.__SSBO[window_id].items():
-			DestroyMaterialBuffer(ssbo_id)
+			DestroySSBOBuffer(ssbo_id)
 		cls.__SSBO.pop(window_id, None)
 
 
@@ -175,17 +190,25 @@ class MaterialControllerSystem:
 
 
 	@classmethod
-	def AppendMaterialDescriptor(cls, material: MaterialInterface, material_descriptor: Tuple[int, Dict[str, allowed_types_shader]], window_id: int) -> None:
+	def AppendMaterialDescriptor(cls, material: MaterialInterface, material_descriptor: Tuple[int, Dict[str, Tuple[allowed_types_shader, int]]], window_id: int) -> None:
 		ssbo_index = material_descriptor[0]
+		if(ssbo_index == -1):
+			PrintLog(f"[ERROR] The shader of this material does not have a descriptor of material", LogColors.RED)
+			return
 
 		dtype_material = cls.__DESCRIPTOR_MATERIAL[window_id]
 		confirmed_materials_lenght = cls.__CONFIRMED_MATERIALS_LENGHT[window_id]
 		confirmed_materials_index = cls.__CONFIRMED_MATERIALS_INDEX[window_id]
 		confirmed_materials_data = cls.__CONFIRMED_MATERIALS_DATA[window_id]
 
-		data = [convertor[t](name) for name, t in material_descriptor[1].items()]
-		data.append(('padding', uint8, len(data)))
+		data = [convertor[t[0]](name, t[1]) for name, t in material_descriptor[1].items() if(t[0] is not None)]
 		material_dtype = dtype(data)
+		current_size = material_dtype.itemsize
+		desired_alignment = 16
+		padding_needed = (desired_alignment - (current_size % desired_alignment)) % desired_alignment
+		if padding_needed > 0: 
+			data.append(('padding', uint8, (1, 1, padding_needed)))
+			material_dtype = dtype(data)
 
 		if(ssbo_index in dtype_material):
 			if(material_dtype != dtype_material[ssbo_index]):
@@ -208,6 +231,9 @@ class MaterialControllerSystem:
 
 	@classmethod
 	def RemoveMaterialDescriptor(cls, material: MaterialInterface, ssbo_index: int, window_id: int) -> None:
+		if(ssbo_index == -1):
+			PrintLog(f"[ERROR] The shader of this material does not have a descriptor of material", LogColors.RED)
+			return
 		material_id = material.GetId()
 
 		confirmed_materials_lenght = cls.__CONFIRMED_MATERIALS_LENGHT[window_id][ssbo_index]
@@ -222,6 +248,7 @@ class MaterialControllerSystem:
 			cls.__DESCRIPTOR_MATERIAL[window_id].pop(ssbo_index, None)
 			cls.__CREATION_NDARRAY_DATA_REQUEST[window_id].discard(ssbo_index)
 			cls.__DELETE_FROM_NDARRAY_DATA_BY_INDEX_REQUEST[window_id].pop(ssbo_index, None)
+			cls.__UPDATE_NDARRAY_DATA_REQUEST[window_id].pop(ssbo_index, None)
 			cls.__DESTRUCTION_NDARRAY_DATA_REQUEST[window_id].add(ssbo_index)
 			cls.__DESTRUCTION_REQUEST[window_id] = True
 			return
@@ -237,9 +264,12 @@ class MaterialControllerSystem:
 
 	@classmethod
 	def UpdateMaterialDescriptor(cls, material: MaterialInterface, ssbo_index: int, window_id: int) -> None:
+		if(ssbo_index == -1):
+			PrintLog(f"[ERROR] The shader of this material does not have a descriptor of material", LogColors.RED)
+			return
 		material_id = material.GetId()
 		material_index = cls.__CONFIRMED_MATERIALS_INDEX[window_id][ssbo_index][material_id]
-		cls.__CONFIRMED_MATERIALS_DATA[window_id][ssbo_index][material_index] = material.GetUniforms()
+		#cls.__CONFIRMED_MATERIALS_DATA[window_id][ssbo_index][material_index] = material.GetUniforms()
 		
 		update = cls.__UPDATE_NDARRAY_DATA_REQUEST[window_id]
 		if(ssbo_index not in update): update[ssbo_index] = {material_id: material_index}
@@ -264,15 +294,17 @@ class MaterialControllerSystem:
 
 			for material_class_id, index in materials_index.items():
 				material_data = materials_data[material_class_id]
+				ndarray_data = materials_ndarray_data[index]
 				for field_name in material_dtype.names: # type: ignore
 					data = material_data.get(field_name)
 					if(data is None): break
-					primitive = get_primitive.get(data.__class__.__name__)
-					if(primitive is None): break
-					materials_ndarray_data[index][field_name] = primitive(data)
+					converted_data = 0
+					name_data = data.__class__.__name__
+					if(name_data == 'tuple'): converted_data = UnpuckTuple(data) # type: ignore
+					else: converted_data = get_primitive[name_data](data)
+					ndarray_data[field_name] = converted_data
 
-			#ndarray_data_material[ssbo_index] = materials_ndarray_data
-			UpdateMaterialBuffer(ssbo[ssbo_index], materials_ndarray_data)
+			UpdateSSBOBuffer(ssbo[ssbo_index], materials_ndarray_data)
 
 		cls.__UPDATE_REQUEST[window_id] = False
 
@@ -286,7 +318,7 @@ class MaterialControllerSystem:
 		for ssbo_index, index_deleted_materials in delete_from_ndarray_data_by_index_request_in_window.items():
 			for index_deleted_material in index_deleted_materials:
 				ndarray_data_material[ssbo_index] = delete(ndarray_data_material[ssbo_index], index_deleted_material)
-			UpdateMaterialBuffer(cls.__SSBO[window_id][ssbo_index], ndarray_data_material[ssbo_index])
+			UpdateSSBOBuffer(cls.__SSBO[window_id][ssbo_index], ndarray_data_material[ssbo_index])
 
 		delete_from_ndarray_data_by_index_request_in_window.clear()
 		cls.__DELETE_FROM_REQUEST[window_id] = False
@@ -297,7 +329,7 @@ class MaterialControllerSystem:
 		destruction_request_in_window = cls.__DESTRUCTION_NDARRAY_DATA_REQUEST[window_id]
 		for ssbo_index in destruction_request_in_window:
 			cls.__NDARRAY_DATA_MATERIAL[window_id].pop(ssbo_index, None)
-			DestroyMaterialBuffer(cls.__SSBO[window_id][ssbo_index])
+			DestroySSBOBuffer(cls.__SSBO[window_id][ssbo_index])
 		destruction_request_in_window.clear()
 		cls.__DESTRUCTION_REQUEST[window_id] = False
 
@@ -323,16 +355,19 @@ class MaterialControllerSystem:
 
 			for material_class_id, index in materials_index.items():
 				material_data = materials_data[material_class_id]
+				ndarray_data = materials_ndarray_data[index]
 				for field_name in material_dtype.names: # type: ignore
 					data = material_data.get(field_name)
 					if(data is None): break
-					primitive = get_primitive.get(data.__class__.__name__)
-					if(primitive is None): break
-					materials_ndarray_data[index][field_name] = primitive(data)
+					converted_data = 0
+					name_data = data.__class__.__name__
+					if(name_data == 'tuple'): converted_data = UnpuckTuple(data) # type: ignore
+					else: converted_data = get_primitive[name_data](data)
+					ndarray_data[field_name] = converted_data
 
 			ndarray_data_material[ssbo_index] = materials_ndarray_data
 		
-			ssbo[ssbo_index] = CreateMaterialBuffer(ssbo_index, materials_ndarray_data)
+			ssbo[ssbo_index] = CreateSSBOBuffer(ssbo_index, materials_ndarray_data)
 		
 		creation_request_in_window.clear()
 		cls.__CREATION_REQUEST[window_id] = False

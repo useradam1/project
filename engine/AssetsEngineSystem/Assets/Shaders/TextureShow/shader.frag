@@ -1,10 +1,9 @@
 #version 430 core
 out vec4 OutColor;
-in vec4 position_local_screen;
 
-uniform sampler2D MainTexture;
+layout (binding = 0, rgba8) uniform image2D MainTexture;
 
 void main()
 {
-	OutColor = texture(MainTexture, (position_local_screen.xy + 1.0) * 0.5);
+	OutColor = imageLoad(MainTexture, ivec2(gl_FragCoord.xy));
 }

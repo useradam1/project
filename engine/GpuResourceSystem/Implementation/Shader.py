@@ -21,7 +21,7 @@ class Shader(ShaderInterface):
 	__OBJECT: uint32
 	__LOAD_STATUS_GPU: bool
 	__SHADER_DATA: ShaderData
-	__MATERIAL: Tuple[int, Dict[str, allowed_types_shader]]
+	__MATERIAL: Tuple[int, Dict[str, Tuple[allowed_types_shader, int]]]
 
 
 	__WINDOW_ID: int
@@ -118,5 +118,5 @@ class Shader(ShaderInterface):
 		return self
 	
 	
-	def GetMaterialDescriptor(self) -> Tuple[int, Dict[str, allowed_types_shader]]:
+	def GetMaterialDescriptor(self) -> Tuple[int, Dict[str, Tuple[allowed_types_shader, int]]]:
 		return self.__MATERIAL

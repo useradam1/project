@@ -2,11 +2,13 @@ from .Texture2D import Texture2D
 from .Shader import Shader
 from ...Math import *
 from abc import ABC, abstractmethod
-from typing import Union, Optional, Dict
+from typing import Union, Optional, Dict, Tuple
 
 
 
-allowed_type_uniform = Union[int, float, bool, vec2, vec3, vec4, mat2, mat3, mat4, Texture2D]
+allowed_type = Union[int, float, bool, vec2, vec3, vec4, mat2, mat3, mat4, Texture2D]
+
+allowed_type_uniform = Union[allowed_type, Tuple[allowed_type, ...]]
 
 
 
