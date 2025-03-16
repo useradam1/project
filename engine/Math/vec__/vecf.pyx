@@ -4,8 +4,10 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memset
 from libc.math cimport isnan, fabsf, sqrtf, acosf, cosf, sinf, tanf, powf, copysignf, fmodf, floorf
 from ctypes import c_float, Array
-from typing import Optional, Union, Set
+from typing import Optional, Union, Set, Tuple
 from numpy import radians
+cimport numpy as np
+from numpy cimport PyArray_DATA
 
 
 def sin(float value) -> float:
@@ -49,7 +51,7 @@ cdef class vec2_ptr_static(vec2):
 		self._global_magnitude_ptr = value._global_magnitude_ptr
 		self._global_sqrMagnitude_ptr = value._global_sqrMagnitude_ptr
 	
-	def Unlink(self) -> None:
+	def UnlinkVector(self) -> None:
 		for i in range(2): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
@@ -78,6 +80,9 @@ cdef class vec2_ptr_static(vec2):
 	@y.setter
 	def y(self, float value) -> None:
 		print("Not allowed")
+
+	def CreateTuple(self) -> Tuple[float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(2))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>2).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -335,6 +340,26 @@ cdef class vec2:
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(2):
+			buffer[i+offset] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemory(self) -> None:
+		for i in range(2):
+			self._global_data[i] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &self._global_data[i]
+
+
+	def CreateTuple(self) -> Tuple[float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(2))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>2).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -819,6 +844,29 @@ cdef class mat2:
 		for i in range(4): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_determinant_ptr = &self._global_determinant
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(4):
+			buffer[i+offset] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemory(self) -> None:
+		for i in range(4):
+			self._global_data[i] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &self._global_data[i]
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(2))
+	def CreateTupleBasisJ(self) -> Tuple[float, float]:
+		return tuple(self._global_data_ptr[0][2+i] for i in range(2))
+	def CreateTuple(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(4))
 
 	def CreateCTypeBasisI(self) -> Array[c_float]:
 		return (c_float * <size_t>2).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -1379,6 +1427,25 @@ cdef class vec3:
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(3):
+			buffer[i+offset] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemory(self) -> None:
+		for i in range(3):
+			self._global_data[i] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &self._global_data[i]
+
+
+	def CreateTuple(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -1898,6 +1965,31 @@ cdef class mat3:
 		for i in range(9): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_determinant_ptr = &self._global_determinant
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(9):
+			buffer[i+offset] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemory(self) -> None:
+		for i in range(9):
+			self._global_data[i] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &self._global_data[i]
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
+	def CreateTupleBasisJ(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][3+i] for i in range(3))
+	def CreateTupleBasisK(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][6+i] for i in range(3))
+	def CreateTuple(self) -> Tuple[float, float, float, float, float, float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(9))
 
 	def CreateCTypeBasisI(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -2502,6 +2594,31 @@ cdef class Rotation(mat3):
 		for i in range(9): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_determinant_ptr = &self._global_determinant
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(9):
+			buffer[i+offset] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemory(self) -> None:
+		for i in range(9):
+			self._global_data[i] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &self._global_data[i]
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
+	def CreateTupleBasisJ(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][3+i] for i in range(3))
+	def CreateTupleBasisK(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][6+i] for i in range(3))
+	def CreateTuple(self) -> Tuple[float, float, float, float, float, float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(9))
 
 	def CreateCTypeBasisI(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -2909,6 +3026,25 @@ cdef class vec4:
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(4):
+			buffer[i+offset] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemory(self) -> None:
+		for i in range(4):
+			self._global_data[i] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &self._global_data[i]
+
+
+	def CreateTuple(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(4))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -3409,6 +3545,33 @@ cdef class mat4:
 		for i in range(16): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_determinant_ptr = &self._global_determinant
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(16):
+			buffer[i+offset] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemory(self) -> None:
+		for i in range(16):
+			self._global_data[i] = self._global_data_ptr[i][0]
+			self._global_data_ptr[i] = &self._global_data[i]
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(4))
+	def CreateTupleBasisJ(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][4+i] for i in range(4))
+	def CreateTupleBasisK(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][8+i] for i in range(4))
+	def CreateTupleBasisW(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][12+i] for i in range(4))
+	def CreateTuple(self) -> Tuple[float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(16))
 
 	def CreateCTypeBasisI(self) -> Array[c_float]:
 		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -4074,18 +4237,303 @@ cdef inline void mat4_matmul_vec4(float* target_vector[4], float* matrix[16], fl
 
 
 
+cdef class mat4_ptr_static(mat4):
+
+	def LinkMatrix(self, mat4 value) -> None:
+		for i in range(16): self._global_data_ptr[i] = value._global_data_ptr[i]
+		self._global_determinant = value._global_determinant
+	
+	def UnlinkMatrix(self) -> None:
+		for i in range(2): self._global_data_ptr[i] = &self._global_data[i]
+		self._global_determinant_ptr = &self._global_determinant
+
+	#cdef float[16] _global_data
+	#cdef float _global_determinant
+
+	#cdef float* _global_data_ptr[16]
+	#cdef float* _global_determinant_ptr
+
+	def __repr__(self) -> str:
+		return f"mat4(\n{self._global_data_ptr[0][0]:.2f}, {self._global_data_ptr[1][0]:.2f}, {self._global_data_ptr[2][0]:.2f}, {self._global_data_ptr[3][0]:.2f}\n{self._global_data_ptr[4][0]:.2f}, {self._global_data_ptr[5][0]:.2f}, {self._global_data_ptr[6][0]:.2f}, {self._global_data_ptr[7][0]:.2f}\n{self._global_data_ptr[8][0]:.2f}, {self._global_data_ptr[9][0]:.2f}, {self._global_data_ptr[10][0]:.2f}, {self._global_data_ptr[11][0]:.2f}\n{self._global_data_ptr[12][0]:.2f}, {self._global_data_ptr[13][0]:.2f}, {self._global_data_ptr[14][0]:.2f}, {self._global_data_ptr[15][0]:.2f}\n)"
+
+	def __len__(self) -> int:
+		return 16
+
+	def __getitem__(self, int index) -> float:
+		return self._global_data_ptr[index][0]
+	def __setitem__(self, int index, float value) -> None:
+		print("Not allowed")
+
+
+	def __init__(self, 
+		float m11 = c_one_float, float m12 = c_zero_float, float m13 = c_zero_float, float m14 = c_zero_float, 
+		float m21 = c_zero_float, float m22 = c_one_float, float m23 = c_zero_float, float m24 = c_zero_float, 
+		float m31 = c_zero_float, float m32 = c_zero_float, float m33 = c_one_float, float m34 = c_zero_float,
+		float m41 = c_zero_float, float m42 = c_zero_float, float m43 = c_zero_float, float m44 = c_one_float) -> None:
+
+		self._global_data[0] = m11
+		self._global_data[1] = m12
+		self._global_data[2] = m13
+		self._global_data[3] = m14
+		self._global_data[4] = m21
+		self._global_data[5] = m22
+		self._global_data[6] = m23
+		self._global_data[7] = m24
+		self._global_data[8] = m31
+		self._global_data[9] = m32
+		self._global_data[10] = m33
+		self._global_data[11] = m34
+		self._global_data[12] = m41
+		self._global_data[13] = m42
+		self._global_data[14] = m43
+		self._global_data[15] = m44
+		self._global_determinant = c_neg_one_float
+
+		for i in range(16): self._global_data_ptr[i] = &self._global_data[i]
+		self._global_determinant_ptr = &self._global_determinant
+
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(4))
+	def CreateTupleBasisJ(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][4+i] for i in range(4))
+	def CreateTupleBasisK(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][8+i] for i in range(4))
+	def CreateTupleBasisW(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][12+i] for i in range(4))
+	def CreateTuple(self) -> Tuple[float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(16))
+
+	def CreateCTypeBasisI(self) -> Array[c_float]:
+		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[0][0])
+	def CreateCTypeBasisJ(self) -> Array[c_float]:
+		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[4][0])
+	def CreateCTypeBasisK(self) -> Array[c_float]:
+		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[8][0])
+	def CreateCTypeBasisK(self) -> Array[c_float]:
+		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[12][0])
+	def CreateCType(self) -> Array[c_float]:
+		return (c_float * <size_t>16).from_address(<size_t>&self._global_data_ptr[0][0])
+
+
+	def SetValues(self,
+		float m11, float m12, float m13, float m14, 
+		float m21, float m22, float m23, float m24, 
+		float m31, float m32, float m33, float m34,
+		float m41, float m42, float m43, float m44) -> None:
+		print("Not allowed")
+
+	def SetMatrix(self, mat4 value) -> None:
+		print("Not allowed")
+
+	def SetIdentity(self) -> None:
+		print("Not allowed")
+
+
+	@property
+	def determinant(self) -> float:
+		return mat4_determinant(self._global_data_ptr, self._global_determinant_ptr)
+	
+	def Inverse(self) -> mat4:
+		print("Not allowed")
+		return self
+	def InverseFrom(self, mat4 value) -> mat4:
+		print("Not allowed")
+		return self
+	@staticmethod
+	def GetInverse(mat4 value) -> mat4:
+		cdef mat4 result = mat4()
+		mat4_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
+		return result
+
+	def Transpose(self) -> mat4:
+		print("Not allowed")
+		return self
+	def TransposeFrom(self, mat4 value) -> mat4:
+		print("Not allowed")
+		return self
+	@staticmethod
+	def GetTransposed(mat4 value) -> mat4:
+		cdef mat4 result = mat4()
+		mat4_transpose_from(result._global_data_ptr, value._global_data_ptr)
+		return result
+
+
+	def __contains__(self, float value) -> bool:
+		return mat4_contains_float(self._global_data_ptr, value)
+
+	def __lt__(self, value: 'allowed_types_mat4') -> bool:
+		if isinstance(value, mat4):
+			return mat4_lt_mat4(self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		return mat4_lt_float(self._global_data_ptr, value)
+	def __le__(self, value: 'allowed_types_mat4') -> bool:
+		if isinstance(value, mat4):
+			return mat4_le_mat4(self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		return mat4_le_float(self._global_data_ptr, value)
+	
+	def __eq__(self, value: 'allowed_types_mat4') -> bool:
+		if isinstance(value, mat4):
+			return mat4_eq_mat4(self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		return mat4_eq_float(self._global_data_ptr, value)
+	def __ne__(self, value: 'allowed_types_mat4') -> bool:
+		if isinstance(value, mat4):
+			return mat4_ne_mat4(self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		return mat4_ne_float(self._global_data_ptr, value)
+
+	def __gt__(self, value: 'allowed_types_mat4') -> bool:
+		if isinstance(value, mat4):
+			return mat4_gt_mat4(self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		return mat4_gt_float(self._global_data_ptr, value)
+	def __ge__(self, value: 'allowed_types_mat4') -> bool:
+		if isinstance(value, mat4):
+			return mat4_ge_mat4(self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		return mat4_ge_float(self._global_data_ptr, value)
+
+
+	def __neg__(self) -> mat4:
+		cdef mat4 result = mat4()
+		mat4_neg_from(result._global_data_ptr, self._global_data_ptr)
+		return result
+	def __pos__(self) -> mat4:
+		cdef mat4 result = mat4()
+		mat4_set_mat4(result._global_data_ptr, self._global_data_ptr)
+		return result
+	def __abs__(self) -> mat4:
+		cdef mat4 result = mat4()
+		mat4_abs_from(result._global_data_ptr, self._global_data_ptr)
+		return result
+
+	def __iadd__(self, value: 'allowed_types_mat4') -> mat4:
+		print("Not allowed")
+		return self
+	def __add__(self, value: 'allowed_types_mat4') -> mat4:
+		cdef mat4 result = mat4()
+		if isinstance(value, mat4):
+			mat4_add_mat4(result._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		else:
+			mat4_add_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+	def __radd__(self, float value) -> mat4:
+		cdef mat4 result = mat4()
+		float_add_mat4(result._global_data_ptr, value, self._global_data_ptr)
+		return result
+	
+	def __isub__(self, value: 'allowed_types_mat4') -> mat4:
+		print("Not allowed")
+		return self
+	def __sub__(self, value: 'allowed_types_mat4') -> mat4:
+		cdef mat4 result = mat4()
+		if isinstance(value, mat4):
+			mat4_sub_mat4(result._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		else:
+			mat4_sub_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+	def __rsub__(self, float value) -> mat4:
+		cdef mat4 result = mat4()
+		float_sub_mat4(result._global_data_ptr, value, self._global_data_ptr)
+		return result
+	
+	def __ipow__(self, value: 'allowed_types_mat4') -> mat4:
+		print("Not allowed")
+		return self
+	def __pow__(self, value: 'allowed_types_mat4') -> mat4:
+		cdef mat4 result = mat4()
+		if isinstance(value, mat4):
+			mat4_pow_mat4(result._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		else:
+			mat4_pow_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+	def __rpow__(self, float value) -> mat4:
+		cdef mat4 result = mat4()
+		float_pow_mat4(result._global_data_ptr, value, self._global_data_ptr)
+		return result
+
+	def __itruediv__(self, value: 'allowed_types_mat4') -> mat4:
+		print("Not allowed")
+		return self
+	def __truediv__(self, value: 'allowed_types_mat4') -> mat4:
+		cdef mat4 result = mat4()
+		if isinstance(value, mat4):
+			mat4_truediv_mat4(result._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		else:
+			mat4_truediv_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+	def __rtruediv__(self, float value) -> mat4:
+		cdef mat4 result = mat4()
+		float_truediv_mat4(result._global_data_ptr, value, self._global_data_ptr)
+		return result
+	
+	def __ifloordiv__(self, value: 'allowed_types_mat4') -> mat4:
+		print("Not allowed")
+		return self
+	def __floordiv__(self, value: 'allowed_types_mat4') -> mat4:
+		cdef mat4 result = mat4()
+		if isinstance(value, mat4):
+			mat4_floordiv_mat4(result._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		else:
+			mat4_floordiv_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+	def __rfloordiv__(self, float value) -> mat4:
+		cdef mat4 result = mat4()
+		float_floordiv_mat4(result._global_data_ptr, value, self._global_data_ptr)
+		return result
+
+	def __imod__(self, value: 'allowed_types_mat4') -> mat4:
+		print("Not allowed")
+		return self
+	def __mod__(self, value: 'allowed_types_mat4') -> mat4:
+		cdef mat4 result = mat4()
+		if isinstance(value, mat4):
+			mat4_mod_mat4(result._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		else:
+			mat4_mod_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+	def __rmod__(self, float value) -> mat4:
+		cdef mat4 result = mat4()
+		float_mod_mat4(result._global_data_ptr, value, self._global_data_ptr)
+		return result
+
+	def __imul__(self, value: 'allowed_types_mat4_mul') -> mat4:
+		print("Not allowed")
+		return self
+	def __mul__(self, value: 'allowed_types_mat4_mul') -> mat4:
+		cdef mat4 result = mat4()
+		if isinstance(value, mat4):
+			mat4_mul_mat4(result._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+		elif isinstance(value, vec4):
+			mat4_mul_vec4(result._global_data_ptr, self._global_data_ptr, (<vec4>value)._global_data_ptr)
+		else:
+			mat4_mul_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+	def __rmul__(self, float value) -> mat4:
+		cdef mat4 result = mat4()
+		mat4_mul_float(result._global_data_ptr, self._global_data_ptr, value)
+		return result
+
+	def __imatmul__(self, mat4 value) -> mat4:
+		print("Not allowed")
+		return self	
+	def __matmul__(self, value: 'allowed_types_mat4_matmul') -> Union[mat4, vec4]:
+		if isinstance(value, mat4):
+			result = mat4()
+			mat4_matmul_mat4((<mat4>result)._global_data_ptr, self._global_data_ptr, (<mat4>value)._global_data_ptr)
+			return result
+		else:
+			result = vec4()
+			mat4_matmul_vec4((<vec4>result)._global_data_ptr, self._global_data_ptr, (<vec4>value)._global_data_ptr)
+			return result
+
+
 
 
 
 cdef class vec3_ptr_static(vec3):
-
-	#cdef float[3] _global_data
-	#cdef float _global_magnitude
-	#cdef float _global_sqrMagnitude
-
-	#cdef float* _global_data_ptr[3]
-	#cdef float* _global_magnitude_ptr
-	#cdef float* _global_sqrMagnitude_ptr
 
 	def LinkVector(self, vec3 vector) -> None:
 		for i in range(3): self._global_data_ptr[i] = vector._global_data_ptr[i]
@@ -4103,6 +4551,14 @@ cdef class vec3_ptr_static(vec3):
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+
+	#cdef float[3] _global_data
+	#cdef float _global_magnitude
+	#cdef float _global_sqrMagnitude
+
+	#cdef float* _global_data_ptr[3]
+	#cdef float* _global_magnitude_ptr
+	#cdef float* _global_sqrMagnitude_ptr
 
 	def __repr__(self) -> str:
 		return f"vec3({self._global_data_ptr[0][0]:.2f}, {self._global_data_ptr[1][0]:.2f}, {self._global_data_ptr[2][0]:.2f})"
@@ -4148,6 +4604,15 @@ cdef class vec3_ptr_static(vec3):
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTuple(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -4448,6 +4913,15 @@ cdef class GlobalTransformPosition(vec3):
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTuple(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -4799,6 +5273,15 @@ cdef class GlobalTransformScale(vec3):
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTuple(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -5165,6 +5648,21 @@ cdef class GlobalTransformRotation(Rotation):
 		for i in range(9): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_determinant_ptr = &self._global_determinant
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
+	def CreateTupleBasisJ(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][3+i] for i in range(3))
+	def CreateTupleBasisK(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][6+i] for i in range(3))
+	def CreateTuple(self) -> Tuple[float, float, float, float, float, float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(9))
 
 	def CreateCTypeBasisI(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -5521,6 +6019,15 @@ cdef class LocalTransformPosition(vec3):
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTuple(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -5868,6 +6375,15 @@ cdef class LocalTransformScale(vec3):
 		self._global_magnitude_ptr = &self._global_magnitude
 		self._global_sqrMagnitude_ptr = &self._global_sqrMagnitude
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTuple(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
 
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -6231,6 +6747,21 @@ cdef class LocalTransformRotation(Rotation):
 		for i in range(9): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_determinant_ptr = &self._global_determinant
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(3))
+	def CreateTupleBasisJ(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][3+i] for i in range(3))
+	def CreateTupleBasisK(self) -> Tuple[float, float, float]:
+		return tuple(self._global_data_ptr[0][6+i] for i in range(3))
+	def CreateTuple(self) -> Tuple[float, float, float, float, float, float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(9))
 
 	def CreateCTypeBasisI(self) -> Array[c_float]:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -6564,6 +7095,23 @@ cdef class TransformMatrix(mat4):
 		for i in range(16): self._global_data_ptr[i] = &self._global_data[i]
 		self._global_determinant_ptr = &self._global_determinant
 
+	def LinkMemory(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		print("Not allowed")
+
+	def UnlinkMemory(self) -> None:
+		return
+
+
+	def CreateTupleBasisI(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(4))
+	def CreateTupleBasisJ(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][4+i] for i in range(4))
+	def CreateTupleBasisK(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][8+i] for i in range(4))
+	def CreateTupleBasisW(self) -> Tuple[float, float, float, float]:
+		return tuple(self._global_data_ptr[0][12+i] for i in range(4))
+	def CreateTuple(self) -> Tuple[float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float]:
+		return tuple(self._global_data_ptr[0][i] for i in range(16))
 
 	def CreateCTypeBasisI(self) -> Array[c_float]:
 		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[0][0])
@@ -6571,6 +7119,8 @@ cdef class TransformMatrix(mat4):
 		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[4][0])
 	def CreateCTypeBasisK(self) -> Array[c_float]:
 		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[8][0])
+	def CreateCTypeBasisK(self) -> Array[c_float]:
+		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[12][0])
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>16).from_address(<size_t>&self._global_data_ptr[0][0])
 
@@ -6825,6 +7375,187 @@ cdef class Transform:
 
 
 
+
+
+	def LinkMemoryLocalSRT(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(16):
+			buffer[i+offset] = self._local_srt._global_data_ptr[i][0]
+			self._local_srt._global_data_ptr[i] = &offset_ptr[i]
+
+		self._local_position._global_data_ptr[0] = self._local_srt._global_data_ptr[12]
+		self._local_position._global_data_ptr[1] = self._local_srt._global_data_ptr[13]
+		self._local_position._global_data_ptr[2] = self._local_srt._global_data_ptr[14]
+		self._local_matrix_scale_rot_srt_ptr[0] = self._local_srt._global_data_ptr[0]
+		self._local_matrix_scale_rot_srt_ptr[1] = self._local_srt._global_data_ptr[1]
+		self._local_matrix_scale_rot_srt_ptr[2] = self._local_srt._global_data_ptr[2]
+		self._local_matrix_scale_rot_srt_ptr[3] = self._local_srt._global_data_ptr[4]
+		self._local_matrix_scale_rot_srt_ptr[4] = self._local_srt._global_data_ptr[5]
+		self._local_matrix_scale_rot_srt_ptr[5] = self._local_srt._global_data_ptr[6]
+		self._local_matrix_scale_rot_srt_ptr[6] = self._local_srt._global_data_ptr[8]
+		self._local_matrix_scale_rot_srt_ptr[7] = self._local_srt._global_data_ptr[9]
+		self._local_matrix_scale_rot_srt_ptr[8] = self._local_srt._global_data_ptr[10]
+
+		self._local_matrix_scale_rot_trs_ptr[0] = self._local_matrix_scale_rot_srt_ptr[0]
+		self._local_matrix_scale_rot_trs_ptr[1] = self._local_matrix_scale_rot_srt_ptr[1]
+		self._local_matrix_scale_rot_trs_ptr[2] = self._local_matrix_scale_rot_srt_ptr[2]
+		self._local_matrix_scale_rot_trs_ptr[4] = self._local_matrix_scale_rot_srt_ptr[3]
+		self._local_matrix_scale_rot_trs_ptr[5] = self._local_matrix_scale_rot_srt_ptr[4]
+		self._local_matrix_scale_rot_trs_ptr[6] = self._local_matrix_scale_rot_srt_ptr[5]
+		self._local_matrix_scale_rot_trs_ptr[8] = self._local_matrix_scale_rot_srt_ptr[6]
+		self._local_matrix_scale_rot_trs_ptr[9] = self._local_matrix_scale_rot_srt_ptr[7]
+		self._local_matrix_scale_rot_trs_ptr[10] = self._local_matrix_scale_rot_srt_ptr[8]
+		self._local_matrix_transpose_trs_ptr[12] = self._local_position._global_data_ptr[0]
+		self._local_matrix_transpose_trs_ptr[13] = self._local_position._global_data_ptr[1]
+		self._local_matrix_transpose_trs_ptr[14] = self._local_position._global_data_ptr[2]
+
+		for i in range(3): self._global_position._local_data_ptr[i] = self._local_position._global_data_ptr[i]
+
+
+	def UnlinkMemoryLocalSRT(self) -> None:
+		for i in range(16):
+			self._local_srt._global_data[i] = self._local_srt._global_data_ptr[i][0]
+			self._local_srt._global_data_ptr[i] = &self._local_srt._global_data[i]
+
+		self._local_position._global_data_ptr[0] = self._local_srt._global_data_ptr[12]
+		self._local_position._global_data_ptr[1] = self._local_srt._global_data_ptr[13]
+		self._local_position._global_data_ptr[2] = self._local_srt._global_data_ptr[14]
+		self._local_matrix_scale_rot_srt_ptr[0] = self._local_srt._global_data_ptr[0]
+		self._local_matrix_scale_rot_srt_ptr[1] = self._local_srt._global_data_ptr[1]
+		self._local_matrix_scale_rot_srt_ptr[2] = self._local_srt._global_data_ptr[2]
+		self._local_matrix_scale_rot_srt_ptr[3] = self._local_srt._global_data_ptr[4]
+		self._local_matrix_scale_rot_srt_ptr[4] = self._local_srt._global_data_ptr[5]
+		self._local_matrix_scale_rot_srt_ptr[5] = self._local_srt._global_data_ptr[6]
+		self._local_matrix_scale_rot_srt_ptr[6] = self._local_srt._global_data_ptr[8]
+		self._local_matrix_scale_rot_srt_ptr[7] = self._local_srt._global_data_ptr[9]
+		self._local_matrix_scale_rot_srt_ptr[8] = self._local_srt._global_data_ptr[10]
+
+		self._local_matrix_scale_rot_trs_ptr[0] = self._local_matrix_scale_rot_srt_ptr[0]
+		self._local_matrix_scale_rot_trs_ptr[1] = self._local_matrix_scale_rot_srt_ptr[1]
+		self._local_matrix_scale_rot_trs_ptr[2] = self._local_matrix_scale_rot_srt_ptr[2]
+		self._local_matrix_scale_rot_trs_ptr[4] = self._local_matrix_scale_rot_srt_ptr[3]
+		self._local_matrix_scale_rot_trs_ptr[5] = self._local_matrix_scale_rot_srt_ptr[4]
+		self._local_matrix_scale_rot_trs_ptr[6] = self._local_matrix_scale_rot_srt_ptr[5]
+		self._local_matrix_scale_rot_trs_ptr[8] = self._local_matrix_scale_rot_srt_ptr[6]
+		self._local_matrix_scale_rot_trs_ptr[9] = self._local_matrix_scale_rot_srt_ptr[7]
+		self._local_matrix_scale_rot_trs_ptr[10] = self._local_matrix_scale_rot_srt_ptr[8]
+		self._local_matrix_transpose_trs_ptr[12] = self._local_position._global_data_ptr[0]
+		self._local_matrix_transpose_trs_ptr[13] = self._local_position._global_data_ptr[1]
+		self._local_matrix_transpose_trs_ptr[14] = self._local_position._global_data_ptr[2]
+
+		for i in range(3): self._global_position._local_data_ptr[i] = self._local_position._global_data_ptr[i]
+
+
+	def LinkMemoryGlobalSRT(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(16):
+			buffer[i+offset] = self._global_srt._global_data_ptr[i][0]
+			self._global_srt._global_data_ptr[i] = &offset_ptr[i]
+
+		self._global_position._global_data_ptr[0] = self._global_srt._global_data_ptr[12]
+		self._global_position._global_data_ptr[1] = self._global_srt._global_data_ptr[13]
+		self._global_position._global_data_ptr[2] = self._global_srt._global_data_ptr[14]
+		self._global_matrix_scale_rot_srt_ptr[0] = self._global_srt._global_data_ptr[0]
+		self._global_matrix_scale_rot_srt_ptr[1] = self._global_srt._global_data_ptr[1]
+		self._global_matrix_scale_rot_srt_ptr[2] = self._global_srt._global_data_ptr[2]
+		self._global_matrix_scale_rot_srt_ptr[3] = self._global_srt._global_data_ptr[4]
+		self._global_matrix_scale_rot_srt_ptr[4] = self._global_srt._global_data_ptr[5]
+		self._global_matrix_scale_rot_srt_ptr[5] = self._global_srt._global_data_ptr[6]
+		self._global_matrix_scale_rot_srt_ptr[6] = self._global_srt._global_data_ptr[8]
+		self._global_matrix_scale_rot_srt_ptr[7] = self._global_srt._global_data_ptr[9]
+		self._global_matrix_scale_rot_srt_ptr[8] = self._global_srt._global_data_ptr[10]
+
+		self._global_matrix_scale_rot_trs_ptr[0] = self._global_matrix_scale_rot_srt_ptr[0]
+		self._global_matrix_scale_rot_trs_ptr[1] = self._global_matrix_scale_rot_srt_ptr[1]
+		self._global_matrix_scale_rot_trs_ptr[2] = self._global_matrix_scale_rot_srt_ptr[2]
+		self._global_matrix_scale_rot_trs_ptr[4] = self._global_matrix_scale_rot_srt_ptr[3]
+		self._global_matrix_scale_rot_trs_ptr[5] = self._global_matrix_scale_rot_srt_ptr[4]
+		self._global_matrix_scale_rot_trs_ptr[6] = self._global_matrix_scale_rot_srt_ptr[5]
+		self._global_matrix_scale_rot_trs_ptr[8] = self._global_matrix_scale_rot_srt_ptr[6]
+		self._global_matrix_scale_rot_trs_ptr[9] = self._global_matrix_scale_rot_srt_ptr[7]
+		self._global_matrix_scale_rot_trs_ptr[10] = self._global_matrix_scale_rot_srt_ptr[8]
+		self._global_matrix_transpose_trs_ptr[12] = self._global_position._global_data_ptr[0]
+		self._global_matrix_transpose_trs_ptr[13] = self._global_position._global_data_ptr[1]
+		self._global_matrix_transpose_trs_ptr[14] = self._global_position._global_data_ptr[2]
+
+
+	def UnlinkMemoryGlobalSRT(self) -> None:
+		for i in range(16):
+			self._global_srt._global_data[i] = self._global_srt._global_data_ptr[i][0]
+			self._global_srt._global_data_ptr[i] = &self._global_srt._global_data[i]
+
+		self._global_position._global_data_ptr[0] = self._global_srt._global_data_ptr[12]
+		self._global_position._global_data_ptr[1] = self._global_srt._global_data_ptr[13]
+		self._global_position._global_data_ptr[2] = self._global_srt._global_data_ptr[14]
+		self._global_matrix_scale_rot_srt_ptr[0] = self._global_srt._global_data_ptr[0]
+		self._global_matrix_scale_rot_srt_ptr[1] = self._global_srt._global_data_ptr[1]
+		self._global_matrix_scale_rot_srt_ptr[2] = self._global_srt._global_data_ptr[2]
+		self._global_matrix_scale_rot_srt_ptr[3] = self._global_srt._global_data_ptr[4]
+		self._global_matrix_scale_rot_srt_ptr[4] = self._global_srt._global_data_ptr[5]
+		self._global_matrix_scale_rot_srt_ptr[5] = self._global_srt._global_data_ptr[6]
+		self._global_matrix_scale_rot_srt_ptr[6] = self._global_srt._global_data_ptr[8]
+		self._global_matrix_scale_rot_srt_ptr[7] = self._global_srt._global_data_ptr[9]
+		self._global_matrix_scale_rot_srt_ptr[8] = self._global_srt._global_data_ptr[10]
+
+		self._global_matrix_scale_rot_trs_ptr[0] = self._global_matrix_scale_rot_srt_ptr[0]
+		self._global_matrix_scale_rot_trs_ptr[1] = self._global_matrix_scale_rot_srt_ptr[1]
+		self._global_matrix_scale_rot_trs_ptr[2] = self._global_matrix_scale_rot_srt_ptr[2]
+		self._global_matrix_scale_rot_trs_ptr[4] = self._global_matrix_scale_rot_srt_ptr[3]
+		self._global_matrix_scale_rot_trs_ptr[5] = self._global_matrix_scale_rot_srt_ptr[4]
+		self._global_matrix_scale_rot_trs_ptr[6] = self._global_matrix_scale_rot_srt_ptr[5]
+		self._global_matrix_scale_rot_trs_ptr[8] = self._global_matrix_scale_rot_srt_ptr[6]
+		self._global_matrix_scale_rot_trs_ptr[9] = self._global_matrix_scale_rot_srt_ptr[7]
+		self._global_matrix_scale_rot_trs_ptr[10] = self._global_matrix_scale_rot_srt_ptr[8]
+		self._global_matrix_transpose_trs_ptr[12] = self._global_position._global_data_ptr[0]
+		self._global_matrix_transpose_trs_ptr[13] = self._global_position._global_data_ptr[1]
+		self._global_matrix_transpose_trs_ptr[14] = self._global_position._global_data_ptr[2]
+
+
+
+	def LinkMemoryLocalTRS(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(16):
+			buffer[i+offset] = self._local_trs._global_data_ptr[i][0]
+			self._local_trs._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemoryLocalTRS(self) -> None:
+		for i in range(16):
+			self._local_trs._global_data[i] = self._local_trs._global_data_ptr[i][0]
+			self._local_trs._global_data_ptr[i] = &self._local_trs._global_data[i]
+
+
+	def LinkMemoryGlobalTRS(self, np.ndarray[np.float32_t, ndim=1] buffer, int offset) -> None:
+		# Получаем указатель на данные буфера
+		cdef float* data_ptr = <float*>PyArray_DATA(buffer)
+		# Учитываем смещение
+		cdef float* offset_ptr = data_ptr + offset
+		
+		# Привязываем указатели класса к данным буфера
+		for i in range(16):
+			buffer[i+offset] = self._global_trs._global_data_ptr[i][0]
+			self._global_trs._global_data_ptr[i] = &offset_ptr[i]
+
+	def UnlinkMemoryGlobalTRS(self) -> None:
+		for i in range(16):
+			self._global_trs._global_data[i] = self._global_trs._global_data_ptr[i][0]
+			self._global_trs._global_data_ptr[i] = &self._global_trs._global_data[i]
+
+
 	@property
 	def local_matrix_srt(self) -> mat4:
 		return self._local_srt
@@ -6833,6 +7564,18 @@ cdef class Transform:
 		if(self._parent is not None):
 			return self._global_srt
 		return self._local_srt
+
+	@property
+	def local_matrix_trs(self) -> mat4:
+		#TransformUpdateLocalMatrixTRS(self)
+		return self._local_trs
+	@property
+	def matrix_trs(self) -> mat4:
+		if(self._parent is not None):
+			#TransformUpdateGlobalMatrixTRS(self)
+			return self._global_trs
+		#TransformUpdateLocalMatrixTRS(self)
+		return self._local_trs
 
 
 	def GetParent(self) -> Optional[Transform]:
@@ -6924,7 +7667,6 @@ cdef class Transform:
 
 		self._local_position = LocalTransformPosition()
 		self._local_position._transform = self
-		vec3_set_vec3(self._local_position._global_data_ptr, position._global_data_ptr)
 
 		self._local_scale = LocalTransformScale()
 		self._local_scale._transform = self
@@ -6950,9 +7692,10 @@ cdef class Transform:
 
 		self._local_srt = TransformMatrix()
 
-		self._local_srt._global_data_ptr[12] = self._local_position._global_data_ptr[0]
-		self._local_srt._global_data_ptr[13] = self._local_position._global_data_ptr[1]
-		self._local_srt._global_data_ptr[14] = self._local_position._global_data_ptr[2]
+		self._local_position._global_data_ptr[0] = self._local_srt._global_data_ptr[12]
+		self._local_position._global_data_ptr[1] = self._local_srt._global_data_ptr[13]
+		self._local_position._global_data_ptr[2] = self._local_srt._global_data_ptr[14]
+		vec3_set_vec3(self._local_position._global_data_ptr, position._global_data_ptr)
 
 		self._local_matrix_scale_rot_srt_ptr[0] = self._local_srt._global_data_ptr[0]
 		self._local_matrix_scale_rot_srt_ptr[1] = self._local_srt._global_data_ptr[1]
@@ -7024,9 +7767,9 @@ cdef class Transform:
 
 		self._global_srt = TransformMatrix()
 
-		self._global_srt._global_data_ptr[12] = self._global_position._global_data_ptr[0]
-		self._global_srt._global_data_ptr[13] = self._global_position._global_data_ptr[1]
-		self._global_srt._global_data_ptr[14] = self._global_position._global_data_ptr[2]
+		self._global_position._global_data_ptr[0] = self._global_srt._global_data_ptr[12]
+		self._global_position._global_data_ptr[1] = self._global_srt._global_data_ptr[13]
+		self._global_position._global_data_ptr[2] = self._global_srt._global_data_ptr[14]
 
 		self._global_matrix_scale_rot_srt_ptr[0] = self._global_srt._global_data_ptr[0]
 		self._global_matrix_scale_rot_srt_ptr[1] = self._global_srt._global_data_ptr[1]
@@ -7065,17 +7808,6 @@ cdef class Transform:
 		TransformUpdateLocalMatrixSRT(self, c_true_bool)
 
 
-	@property
-	def local_matrix_trs(self) -> mat4:
-		TransformUpdateLocalMatrixTRS(self)
-		return self._local_trs
-	@property
-	def matrix_trs(self) -> mat4:
-		if(self._parent is not None):
-			TransformUpdateGlobalMatrixTRS(self)
-			return self._global_trs
-		TransformUpdateLocalMatrixTRS(self)
-		return self._local_trs
 
 
 cdef inline void TransformUpdateLocalMatrixTRS(Transform transform):
@@ -7114,7 +7846,14 @@ cdef inline void TransformUpdateLocalMatrixSRT(Transform transform, bint is_not_
 		transform._local_right._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		transform._local_up._global_magnitude_ptr[0] = c_neg_one_float
 		transform._local_up._global_sqrMagnitude_ptr[0] = c_neg_one_float
-	transform._local_obslate_trs = c_true_bool
+
+	#transform._local_obslate_trs = c_true_bool
+	mat4_matmul_mat4(
+		transform._local_trs._global_data_ptr,
+		transform._local_matrix_transpose_trs_ptr,
+		transform._local_matrix_scale_rot_trs_ptr
+	)
+	transform._local_trs._global_determinant_ptr[0] = c_neg_one_float
 
 	if(transform._parent is not None):
 		TransformUpdateGlobalMatrixSRT(<Transform>transform)
@@ -7130,7 +7869,6 @@ cdef inline void TransformUpdateGlobalMatrixSRT(Transform transform):
 		(<mat4>transform._parent.matrix_srt)._global_data_ptr
 	)
 	transform._global_srt._global_determinant_ptr[0] = c_neg_one_float
-	transform._global_obslate_trs = c_true_bool
 
 	cdef float[3] magnitude
 	cdef int i, j, k
@@ -7160,6 +7898,14 @@ cdef inline void TransformUpdateGlobalMatrixSRT(Transform transform):
 	transform._global_right._global_sqrMagnitude_ptr[0] = c_neg_one_float
 	transform._global_up._global_magnitude_ptr[0] = c_neg_one_float
 	transform._global_up._global_sqrMagnitude_ptr[0] = c_neg_one_float
+
+	#transform._global_obslate_trs = c_true_bool
+	mat4_matmul_mat4(
+		transform._global_trs._global_data_ptr,
+		transform._global_matrix_transpose_trs_ptr,
+		transform._global_matrix_scale_rot_trs_ptr
+	)
+	transform._global_trs._global_determinant_ptr[0] = c_neg_one_float
 
 	for child_transform in transform._children:
 		TransformUpdateGlobalMatrixSRT(<Transform>child_transform)

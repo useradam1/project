@@ -1,4 +1,4 @@
-from .MaterialInterface import MaterialInterface
+from .MaterialInterface import MaterialInterface, allowed_type_uniform
 from .MaterialController import MaterialControllerSystem
 from ...WindowSystem import WindowContextSystem
 
@@ -6,12 +6,10 @@ from .Texture2D import Texture2D
 from .Shader import Shader
 from ...Math import *
 
-from typing import Dict, Union, Optional
+from typing import Dict, Optional
 from ...Log import LogColors, PrintLog
 
 
-
-allowed_type_uniform = Union[int, float, bool, vec2, vec3, vec4, mat2, mat3, mat4, Texture2D]
 
 
 

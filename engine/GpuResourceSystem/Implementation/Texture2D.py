@@ -2,8 +2,9 @@ from ..GpuResourceSystem import GpuResourceManagerSystem, IGpuResource
 from ...WindowSystem import WindowContextSystem
 from ...UpdateSystem import Update
 from ...FlowControlSystem import FlowControlSystem
-from ...ApiGraphics import CreateTexture2D, ClearTexture2D, FillTexture2DWithColor, UpdateTexture2D, DestroyTexture
+from ...ApiGraphics import CreateTexture2D, ClearTexture2D, FillTexture2DWithColor, UpdateTexture2D, DestroyTexture, BindTexture2D_rgba8
 from ...Loader import ReadImage2D, ImageData2D
+from .TextureController import BindTextureController, ITexture
 from typing import TypedDict, List, Tuple
 from numpy import uint32, ndarray, dtype, uint8, zeros
 
@@ -36,6 +37,8 @@ class Texture2D:
 	__HEIGHT: int
 	__WIDTH: int
 
+	__BIND_NUMBER: ITexture
+
 	__WINDOW_ID: int
 	__IGPU_RESOURCE: IGpuResource
 
@@ -59,6 +62,8 @@ class Texture2D:
 		self.__HEIGHT = self.__THREAD_LOAD_RAM['image_data'].GetHeight()
 		self.__WIDTH = self.__THREAD_LOAD_RAM['image_data'].GetWidth()
 
+		self.__BIND_NUMBER = ITexture(-1)
+
 		self.__WINDOW_ID = WindowContextSystem.GetCurrentWindowId()
 		if(not self.__WINDOW_ID):
 			PrintLog(f"{self.__class__.__name__} cannot be created outside of the window context", color= LogColors.RED)
@@ -74,7 +79,7 @@ class Texture2D:
 		self.__OBJECT = CreateTexture2D()
 		ClearTexture2D(self.__OBJECT, (0,0,0,0))
 
-		self.__UPDATE = Update(self.__checkQueue)
+		self.__UPDATE = Update(self.__CheckQueue)
 		self.__UPDATE.enabled = False
 
 		self.__STATUS_EXIST = True
@@ -229,9 +234,24 @@ class Texture2D:
 
 	def FillWithColor(self, color: Tuple[float,float,float,float]) -> None:
 		FillTexture2DWithColor(self.__OBJECT, color)
+	
+
+	def Bind(self, link_number: int) -> None:
+		if(self.__BIND_NUMBER.link_number != -1): return
+		self.__BIND_NUMBER.link_number = link_number
+		if(not BindTextureController.AppendTexture(self.__BIND_NUMBER, self.__WINDOW_ID)):
+			self.__BIND_NUMBER.link_number = -1
+			PrintLog(f"[ERROR_{self.__class__.__name__}] the link number is already in use: {link_number}")
+			return
+		BindTexture2D_rgba8(link_number, self.__OBJECT)
+	
+	def UnBind(self) -> None:
+		if(self.__BIND_NUMBER.link_number == -1): return
+		BindTexture2D_rgba8(self.__BIND_NUMBER.link_number, nulluint32)
+		self.__BIND_NUMBER.link_number = -1
 
 
-	def __checkQueue(self) -> None:
+	def __CheckQueue(self) -> None:
 		if(self.__THREAD_LOAD_RAM['ready']): self.__TASK_QUEUE.execute_next()
 		if(self.__TASK_QUEUE.is_empty()):
 			self.__UPDATE.enabled = False

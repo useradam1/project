@@ -16,10 +16,10 @@ class Vertex:
 
 
 class MeshData:
-	__VERTICES: ndarray[tuple[int, ...],dtype[float32]]
-	__NORMALS: ndarray[tuple[int, ...],dtype[float32]]
-	__UV_COORDS: ndarray[tuple[int, ...],dtype[float32]]
-	__FACES: ndarray[tuple[int, ...],dtype[int32]]
+	__VERTICES: ndarray[tuple[int, int],dtype[float32]]
+	__NORMALS: ndarray[tuple[int, int],dtype[float32]]
+	__UV_COORDS: ndarray[tuple[int, int],dtype[float32]]
+	__FACES: ndarray[tuple[int, int],dtype[int32]]
 
 	__COUNT_FACES: int
 	__MIN_VOLUME: Tuple[float,float,float]
@@ -36,10 +36,10 @@ class MeshData:
 		self.__VT = []
 		self.__F = []
 
-	def GetVertices(self) -> ndarray[tuple[int, ...],dtype[float32]]: return self.__VERTICES
-	def GetNormals(self) -> ndarray[tuple[int, ...],dtype[float32]]: return self.__NORMALS
-	def GetUvCoords(self) -> ndarray[tuple[int, ...],dtype[float32]]: return self.__UV_COORDS
-	def GetFaces(self) -> ndarray[tuple[int, ...],dtype[int32]]: return self.__FACES
+	def GetVertices(self) -> ndarray[tuple[int, int],dtype[float32]]: return self.__VERTICES
+	def GetNormals(self) -> ndarray[tuple[int, int],dtype[float32]]: return self.__NORMALS
+	def GetUvCoords(self) -> ndarray[tuple[int, int],dtype[float32]]: return self.__UV_COORDS
+	def GetFaces(self) -> ndarray[tuple[int, int],dtype[int32]]: return self.__FACES
 
 	def GetCountFaces(self) -> int: return self.__COUNT_FACES
 	def GetMinVolume(self) -> Tuple[float,float,float]: return self.__MIN_VOLUME

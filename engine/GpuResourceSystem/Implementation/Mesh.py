@@ -67,7 +67,7 @@ class Mesh:
 
 		self.__OBJECT = GpuMeshInstanced(nulluint32,nulluint32,nulluint32,nulluint32,nulluint32,0)
 
-		self.__UPDATE = Update(self.__checkQueue)
+		self.__UPDATE = Update(self.__CheckQueue)
 		self.__UPDATE.enabled = False
 
 		self.__STATUS_EXIST = True
@@ -219,7 +219,7 @@ class Mesh:
 
 
 
-	def __checkQueue(self) -> None:
+	def __CheckQueue(self) -> None:
 		if(self.__THREAD_LOAD_RAM['ready']): self.__TASK_QUEUE.execute_next()
 		if(self.__TASK_QUEUE.is_empty()):
 			self.__UPDATE.enabled = False

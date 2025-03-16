@@ -3,7 +3,13 @@ from .ApiGraphics import GetVersion
 from .Profiler import Profiler
 
 
+from .WindowSystem.Controllers.KeyBoard import KeyboardSystem
 from .WindowSystem.Controllers.Mouse import MouseSystem
+
+from .RenderSystem import CameraController
+from .RenderSystem import ProceduralController
+
+from .GpuResourceSystem import BindTextureController
 from .GpuResourceSystem import GpuResourceManagerSystem
 from .GpuResourceSystem import ShaderContext
 from .GpuResourceSystem import MaterialControllerSystem
@@ -13,6 +19,8 @@ from .SceneObjectsSystem import SceneManagerSystem
 from .SceneObjectsSystem import ComponentManagerSystem
 from .RenderSystem import RenderingPipeline
 
+
+
 VERSION_PRINTED: bool = False
 
 def WindowInitialization(window_id: int) -> None:
@@ -20,7 +28,11 @@ def WindowInitialization(window_id: int) -> None:
 	if(not VERSION_PRINTED):
 		print(GetVersion())
 		VERSION_PRINTED = True
+	KeyboardSystem.WindowInitialization(window_id)
 	MouseSystem.WindowInitialization(window_id)
+	CameraController.WindowInitialization(window_id)
+	ProceduralController.WindowInitialization(window_id)
+	BindTextureController.WindowInitialization(window_id)
 	GpuResourceManagerSystem.WindowInitialization(window_id)
 	ShaderContext.WindowInitialization(window_id)
 	MaterialControllerSystem.WindowInitialization(window_id)
@@ -36,6 +48,9 @@ def WindowFlush(window_id: int) -> None:
 	UpdateManagerSystem.WindowFlush(window_id)
 	MaterialControllerSystem.WindowFlush(window_id)
 	GpuResourceManagerSystem.WindowFlush(window_id)
+	BindTextureController.WindowFlush(window_id)
+	ProceduralController.WindowFlush(window_id)
+	CameraController.WindowFlush(window_id)
 
 def WindowTerminate(window_id: int) -> None:
 	RenderingPipeline.WindowTerminate(window_id)
@@ -46,15 +61,29 @@ def WindowTerminate(window_id: int) -> None:
 	MaterialControllerSystem.WindowTerminate(window_id)
 	ShaderContext.WindowTerminate(window_id)
 	GpuResourceManagerSystem.WindowTerminate(window_id)
+	BindTextureController.WindowTerminate(window_id)
+	ProceduralController.WindowTerminate(window_id)
+	CameraController.WindowTerminate(window_id)
 	MouseSystem.WindowTerminate(window_id)
+	KeyboardSystem.WindowTerminate(window_id)
+
 
 
 def WindowUpdate(window_id: int, time: float) -> None:
 	# a = GetCurrentTime()
+	KeyboardSystem.WindowUpdate(window_id)
+	MouseSystem.WindowUpdate(window_id)
 
 	UpdateManagerSystem.Tick(window_id, time)
 
-	RenderingPipeline.RenderScene(window_id)
+	RenderingPipeline.RenderScene(
+		window_id, 
+		(
+			SceneManagerSystem.UpdateBuffer,
+			CameraController.UpdateBuffer,
+			ProceduralController.UpdateBuffer
+		)
+	)
 
 	# b = GetCurrentTime()
 	# Profiler.AppendData(

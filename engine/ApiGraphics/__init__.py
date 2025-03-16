@@ -29,9 +29,9 @@ from .FrameBuffer.CreateFrameBuffer import CreateFrameBuffer, BindFrameBuffer
 from .FrameBuffer.DestroyFrameBuffer import DestroyFrameBuffer
 from .FrameBuffer.SetTextuerFrameBuffer import UpdateSizeFrameBuffer, SetTextures2DFrameBuffer, ClearTextures2DFromFrameBuffer
 
-from .Material.CreateMaterial import CreateMaterialBuffer
-from .Material.UpdateMaterialBuffer import UpdateMaterialBuffer
-from .Material.DestroyMaterial import DestroyMaterialBuffer
+from .SSBO.CreateSSBOBuffer import CreateSSBOBuffer
+from .SSBO.UpdateSSBOBuffer import UpdateSSBOBuffer
+from .SSBO.DestroySSBOBuffer import DestroySSBOBuffer
 
 from .Settings import GetVersion
 from .Settings import ClearDepthBuffer

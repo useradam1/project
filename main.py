@@ -21,7 +21,7 @@ def main() -> int:
 	# 	frame_rate=0,
 	# 	resize=True,
 	# )
-	#SceneManager.RunScene("MainScene")
+	# SceneManager.RunScene("MainScene")
 
 	StartEngine()
 	return 0
