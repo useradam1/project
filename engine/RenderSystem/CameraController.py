@@ -1,6 +1,6 @@
 
 from typing import Dict, Set, List
-from numpy import dtype, float32, int32, uint32, ndarray, zeros, delete
+from numpy import dtype, float32, int32, uint32, ndarray, zeros, uint8
 
 from ..ApiGraphics import CreateSSBOBuffer, UpdateSSBOBuffer, DestroySSBOBuffer
 
@@ -17,7 +17,7 @@ class CameraController:
 
 	__NUMPY_ARRAY_CAMERAS_LINK_FREE_CELLS: Dict[int, Set[int]] = {}
 	__NUMPY_ARRAY_CAMERAS_LINK: Dict[int, ndarray] = {}
-	__LIST_OF_REGISTERED_CAMERAS: Dict[int, List[int]] = {}
+	__LIST_OF_REGISTERED_CAMERAS: Dict[int, ndarray[tuple[int], dtype[uint8]]] = {}
 	__SSBO: Dict[int, uint32] = {}
 
 
@@ -25,13 +25,13 @@ class CameraController:
 	def WindowInitialization(cls, window_id: int) -> None:
 		cls.__NUMPY_ARRAY_CAMERAS_LINK_FREE_CELLS[window_id] = set(range(SSBO_LIMIT))
 		cls.__NUMPY_ARRAY_CAMERAS_LINK[window_id] = zeros(SSBO_LIMIT, dtype=typedata)
-		cls.__LIST_OF_REGISTERED_CAMERAS[window_id] = []
+		cls.__LIST_OF_REGISTERED_CAMERAS[window_id] = zeros(SSBO_LIMIT, dtype= bool)
 		cls.__SSBO[window_id] = CreateSSBOBuffer(SSBO_INDEX, zeros(SSBO_LIMIT, dtype=typedata))
 
 	@classmethod
 	def WindowFlush(cls, window_id: int) -> None:
 		cls.__NUMPY_ARRAY_CAMERAS_LINK_FREE_CELLS[window_id] = set(range(SSBO_LIMIT))
-		cls.__LIST_OF_REGISTERED_CAMERAS[window_id].clear()
+		cls.__LIST_OF_REGISTERED_CAMERAS[window_id].fill(False)
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
@@ -51,18 +51,18 @@ class CameraController:
 		s = cls.__NUMPY_ARRAY_CAMERAS_LINK_FREE_CELLS[window_id]
 		if(s):
 			index = s.pop()
-			cls.__LIST_OF_REGISTERED_CAMERAS[window_id].append(index)
+			cls.__LIST_OF_REGISTERED_CAMERAS[window_id][index] = True
 			return index
 		return -1
 
 	@classmethod
 	def DeallocateIndex(cls, index: int, window_id: int) -> None:
-		cls.__LIST_OF_REGISTERED_CAMERAS[window_id].remove(index)
+		cls.__LIST_OF_REGISTERED_CAMERAS[window_id][index] = False
 		cls.__NUMPY_ARRAY_CAMERAS_LINK_FREE_CELLS[window_id].add(index)
 	
 
 	@classmethod
 	def UpdateBuffer(cls, window_id: int) -> int:
-		cameras =cls.__LIST_OF_REGISTERED_CAMERAS[window_id]
-		UpdateSSBOBuffer(cls.__SSBO[window_id], cls.__NUMPY_ARRAY_CAMERAS_LINK[window_id][cameras])
+		cameras = cls.__NUMPY_ARRAY_CAMERAS_LINK[window_id][cls.__LIST_OF_REGISTERED_CAMERAS[window_id]]
+		UpdateSSBOBuffer(cls.__SSBO[window_id], cameras)
 		return len(cameras)

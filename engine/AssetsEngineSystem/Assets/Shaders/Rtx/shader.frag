@@ -1,7 +1,9 @@
 #version 460 core
+const float SHIFT = 0.001;
 layout(location = 0) out vec4 OutColor;
 in vec2 uv; // -1.0 to 1.0
 uint pixelIndex;
+uniform int FRAME_ID;
 
 struct Material {
 	vec4 color;
@@ -28,20 +30,24 @@ layout(std430, binding = 42) buffer Procedurals {Procedural procedurals[];};
 uniform int PROCEDURALS_COUNT;
 
 
-const float PHI = 1.61803398874989484820459; // Φ = Golden Ratio 
-float Random(){
-	pixelIndex *= (pixelIndex + 195439) * (pixelIndex + 124395) * (pixelIndex + 8445921);
-	return pixelIndex / 4294967295.0;
+uint hash3D(vec3 pos) {
+    uint h = floatBitsToUint(pos.x);
+    h = h * 0x1f3d5u ^ floatBitsToUint(pos.y);
+    h = h * 0x8b29u ^ floatBitsToUint(pos.z);
+    h ^= h >> 16;
+    h *= 0x85ebca6bu;
+    h ^= h >> 13;
+    return h;
 }
-float Random2(){
+float Random(){
 	pixelIndex = pixelIndex * 747796405 + 2891336453;
 	uint result = ((pixelIndex >> ((pixelIndex >> 28) + 4)) ^ pixelIndex) * 277803737;
 	result = (result >> 22) ^ result;
 	return result / 4294967295.0;
 }
 float RandomNormalDistribution(){
-	float theta = 2 * 3.1415926 * Random2();
-	float rho = sqrt(-2.0 * log(Random2()));
+	float theta = 2 * 3.1415926 * Random();
+	float rho = sqrt(-2.0 * log(Random()));
 	return rho * cos(theta);
 }
 vec3 RandomShpereDirection(){
@@ -49,7 +55,7 @@ vec3 RandomShpereDirection(){
 }
 vec3 RandomHemisphereDirection(vec3 normal){
 	vec3 dir = normalize(vec3(RandomNormalDistribution(),RandomNormalDistribution(),RandomNormalDistribution()));
-	if(dot(normal, dir)<0) dir *= -1.0;
+	if(dot(normal, dir)<0.0) dir *= -1.0;
 	return dir;
 }
 
@@ -111,7 +117,7 @@ IntersectInfo elipsIntersection(in Ray ray, in mat4 srt_transform) {
     if(t < 0.0) return NONE_INTERSECT;
 
     // Оптимизированные вычисления мировых координат
-    float t_world = t / rd_len;
+    float t_world = (t / rd_len) - SHIFT;
     vec3 world_hit = ray.ro + ray.rd * t_world;
     
     // Быстрое вычисление нормали
@@ -124,12 +130,72 @@ IntersectInfo elipsIntersection(in Ray ray, in mat4 srt_transform) {
 		!is_inside,
         t_world,
         world_hit,
-        world_normal
+        world_normal * (is_inside?1.0:-1.0)
     );
 }
 
-IntersectInfo boxIntersection(in Ray ray, in mat4 srt_transform) {    
-    return NONE_INTERSECT;
+
+IntersectInfo boxIntersection(in Ray ray, in mat4 srt_transform) {
+
+	mat3 ModelRot = mat3(
+		normalize(srt_transform[0].xyz),
+		normalize(srt_transform[1].xyz),
+		normalize(srt_transform[2].xyz)
+	);
+
+	vec3 boxSize = inverse(ModelRot)*mat3(
+		srt_transform[0].xyz,
+		srt_transform[1].xyz,
+		srt_transform[2].xyz
+	)*vec3(1.0);
+
+
+	vec3 boxPos = srt_transform[3].xyz;
+
+	vec3 ro = (ModelRot*(ray.ro-boxPos));
+	vec3 rd = (ModelRot*ray.rd);
+
+
+    vec3 m = 1.0/(rd); // can precompute if traversing a set of aligned boxes
+    vec3 n = m*ro;   // can precompute if traversing a set of aligned boxes
+    vec3 k = abs(m)*boxSize;
+
+    vec3 t1 = -n - k;
+    vec3 t2 = -n + k;
+
+    float tN = max( max( t1.x, t1.y ), t1.z );
+    float tF = min( min( t2.x, t2.y ), t2.z );
+
+    if( tN>tF || tF<0.0) return NONE_INTERSECT;
+
+
+	vec3 hitpos;
+	vec3 hitnor;
+	float dist;
+	bool is_inside = !(tN>0.0);
+    if(!is_inside){
+		hitnor = step(vec3(tN),t1);
+		dist = tN - SHIFT;
+		hitpos = ray.ro+ray.rd*dist;
+	} // ro ouside the box
+    else{
+		hitnor = step(t2,vec3(tF));
+		dist = tF - SHIFT;
+		hitpos = ray.ro+ray.rd*dist;
+	}  // ro inside the box
+    hitnor *= -sign(rd);
+
+	hitnor = hitnor*ModelRot;
+
+
+
+	return IntersectInfo(
+		true,
+		is_inside,
+		dist,
+		hitpos,
+		hitnor
+	);
 }
 
 
@@ -190,8 +256,12 @@ vec3 render(in Ray ray) {
 	vec3 ray_color = vec3(1);
 
 	Intersect closer;
+	closer = GetCloserProceduralIntersect(ray);
+	//pixelIndex += hash3D(closer.intersect_info.position);
+	//final_color = closer.intersect_info.normal;
+	//return final_color;
+
 	for(int i = 0; i < MAX_BOUNCE_COUNT; i++) {
-		closer = GetCloserProceduralIntersect(ray);
 		if(closer.is_intersect){
 			ray.ro = closer.intersect_info.position;
 			ray.rd = RandomHemisphereDirection(closer.intersect_info.normal);
@@ -201,41 +271,42 @@ vec3 render(in Ray ray) {
 			if(length(ray_color) <= 0) break;
 		}
 		else break;
+		closer = GetCloserProceduralIntersect(ray);
 	}
 
 	return final_color;
 }
 
 
-
+layout (binding = 0, rgba8) uniform image2D MainTexture;
 void main() {
 	ivec2 numPixels = ivec2(20000,20000);
 	ivec2 pixelCoord = ivec2(numPixels.x*uv.x,numPixels.y*uv.y);
-	pixelIndex = pixelCoord.y * numPixels.x + pixelCoord.x;
+	pixelIndex = (pixelCoord.y * numPixels.x + pixelCoord.x) + FRAME_ID;
 
 	vec3 final_color = vec3(0);
 	for(int i = 0; i < CAMERAS_COUNT; i++) {
 		Camera camera = cameras[i];
 		Transform transform_camera = transforms[camera.transform_index];
 
-		// Преобразуем NDC в координаты камеры
 		vec4 ray_eye = vec4( ( inverse(camera.projection) * vec4(uv, 1.0, 1.0) ).xy , 1.0, 0.0); // Преобразуем в направление
-
-		// Преобразуем координаты камеры в мировые координаты
 		vec4 ray_world = transform_camera.trs_transform * ray_eye;
 		vec3 rd = normalize(ray_world.xyz);
+
+		float far_lane_camera = camera.projection[3][2] / (camera.projection[2][2] + 1.0);
 
 		Ray ray = Ray(
 			transform_camera.srt_transform[3].xyz,
 			rd
 		);
 
-		int iterations = 100;
+		int iterations = 5;
 		for(int i = 0; i < iterations; i++) {
 			final_color += render(ray);
 		}
 		final_color /= float(iterations);
+		final_color *= 1;
 	}
 	final_color /= CAMERAS_COUNT;
-	OutColor = vec4(final_color * 10, 1.0);
+	OutColor = vec4(final_color, 1.0);
 }

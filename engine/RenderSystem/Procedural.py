@@ -54,18 +54,19 @@ class Procedural(Component):
 		if(self.__ALLOCATE_INDEX < 0):
 			PrintLog(f"[ERROR_{self.__class__.__name__}] it is impossible to allocate memory, the space of allocated areas greatly exceeds the allowable value of objects for allocation.", LogColors.RED)
 			return
-		gameObject = self.gameObject
-		gameObject.AllocateIndex()
-		if(not gameObject.GetStatusAllocated()):
+
+		IgameObject = self._IGAME_OBJECT
+		IgameObject.allocateIndex()
+		if(not IgameObject.getStatusAllocated()):
 			ProceduralController.DeallocateIndex(self.__ALLOCATE_INDEX, self._WINDOW_ID)
 			self.__ALLOCATE_INDEX = -1
 			return
 
 		numpy_array = ProceduralController.GetAllocateNumpy(self._WINDOW_ID)
-		numpy_array[self.__ALLOCATE_INDEX]["transform_index"] = gameObject.GetAllocateIndex()
+		numpy_array[self.__ALLOCATE_INDEX]["transform_index"] = IgameObject.getAllocateIndex()
 		self.__ATTRIBUTE.LinkMemory(numpy_array[self.__ALLOCATE_INDEX]["material_index_and_type_object"],0)
 
-		gameObject.AppendAllocatableComponent()
+		IgameObject.appendAllocatableComponent()
 
 		self.__STATUS_ALLOCATED = True
 
@@ -78,15 +79,12 @@ class Procedural(Component):
 		ProceduralController.DeallocateIndex(self.__ALLOCATE_INDEX, self._WINDOW_ID)
 		self.__ALLOCATE_INDEX = -1
 		self.__STATUS_ALLOCATED = False
-		self.gameObject.RemoveAllocatableComponent()
 
-		if(self.gameObject.GetAllocatableComponentCount() > 0): return
-		self.gameObject.DeallocateIndex()
+		IgameObject = self._IGAME_OBJECT
+		IgameObject.removeAllocatableComponent()
+
+		if(IgameObject.getAllocatableComponentCount() > 0): return
+		IgameObject.deallocateIndex()
 
 
 
-	def GetStatusAllocated(self) -> bool:
-		return self.__STATUS_ALLOCATED
-	
-	def GetAllocateIndex(self) -> int:
-		return self.__ALLOCATE_INDEX

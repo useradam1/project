@@ -20,6 +20,7 @@ class Component(ComponentInterface):
 	__GAME_OBJECT_ID: int
 	__GAME_OBJECT: GameObjectInterface
 	__TRANSFORM: Transform
+	_IGAME_OBJECT: IGameObject
 
 	_WINDOW_ID: int
 	__ICOMPONENT: IComponent
@@ -62,11 +63,12 @@ class Component(ComponentInterface):
 
 
 	@Protected
-	def __Initialization(self, gameObject: IGameObject) -> None:
+	def __Initialization(self, IgameObject: IGameObject) -> None:
 		#if(not self.__STATUS_EXIST):
-		self.__GAME_OBJECT_ID = gameObject.id
-		self.__GAME_OBJECT = gameObject.gameObject
-		self.__TRANSFORM = gameObject.gameObject.transform
+		self.__GAME_OBJECT_ID = IgameObject.id
+		self.__GAME_OBJECT = IgameObject.gameObject
+		self.__TRANSFORM = IgameObject.gameObject.transform
+		self._IGAME_OBJECT = IgameObject
 		self.__STATUS_EXIST = True
 		PrintLog(f"{self.__class__.__name__} new parent has been assigned", color= LogColors.GREEN)
 		self._OnStart()
@@ -81,7 +83,7 @@ class Component(ComponentInterface):
 		if(self.__AWAKE):
 			self._OnDestroy()
 			ComponentManagerSystem.RemoveComponent(self.__ICOMPONENT, self._WINDOW_ID)
-			del self.__ICOMPONENT
+			del self.__ICOMPONENT, self._IGAME_OBJECT
 			if(self.__STATUS_EXIST):
 				del self.__TRANSFORM, self.__GAME_OBJECT
 				self.__GAME_OBJECT_ID = 0

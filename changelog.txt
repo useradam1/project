@@ -1,1 +1,1 @@
-the first primitive way of drawing graphics has been added, integration with ssbo, you need to check the operation of the MaterialController for errors.
+minor fixes related to SSBO. work has begun on creating an application for baking light

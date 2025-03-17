@@ -9,7 +9,7 @@ def main() -> int:
 
 	Window(
 		title="3DEngine1",
-		size=vec2(500, 300),
+		size=vec2(1000, 700),
 		frame_rate=0,
 		resize=True,
 	)

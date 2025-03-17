@@ -71,10 +71,22 @@ def WindowTerminate(window_id: int) -> None:
 
 def WindowUpdate(window_id: int, time: float) -> None:
 	# a = GetCurrentTime()
+
 	KeyboardSystem.WindowUpdate(window_id)
 	MouseSystem.WindowUpdate(window_id)
 
+	# b = GetCurrentTime()
+	# Profiler.AppendData(
+	# 	data_name= f"{window_id} controllers",
+	# 	data_value= b-a)
+	# a = GetCurrentTime()
+
 	UpdateManagerSystem.Tick(window_id, time)
+
+	# b = GetCurrentTime()
+	# Profiler.AppendData(
+	# 	data_name= f"{window_id} UpdateSystem.Tick",
+	# 	data_value= b-a)
 
 	RenderingPipeline.RenderScene(
 		window_id, 
@@ -85,9 +97,5 @@ def WindowUpdate(window_id: int, time: float) -> None:
 		)
 	)
 
-	# b = GetCurrentTime()
-	# Profiler.AppendData(
-	# 	data_name= f"{window_id} UpdateSystem.Tick",
-	# 	data_value= b-a)
 
 
