@@ -75,7 +75,7 @@ def PreprocessShader(file_path: str, included_files=None) -> Tuple[str, str]:
 	if included_files is None:
 		included_files = set()
 	try:
-		with open(file_path, 'r') as f:
+		with open(file_path, 'r', encoding='utf-8') as f:
 			content = f.read()
 	except FileNotFoundError:
 		return "", f"File not found: {file_path}"
@@ -164,7 +164,7 @@ def CreateShader(paths: Dict[str, Literal['VERTEX_SHADER','GEOMETRY_SHADER','FRA
 		return (nulluint32, material, info_log)
 	
 	for file_path in paths:
-		with open(file_path, 'r') as f:
+		with open(file_path, 'r', encoding='utf-8') as f:
 			m = parse_shader_materials(f.read())
 			if(m[0] != -1): material = m
 

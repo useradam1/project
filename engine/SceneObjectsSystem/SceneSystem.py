@@ -3,7 +3,7 @@ from .SceneInterface import SceneInterface
 from ..ApiGraphics import CreateSSBOBuffer, UpdateSSBOBuffer, DestroySSBOBuffer
 
 from typing import Dict, Set, Optional, Callable, List, Type
-from numpy import zeros, dtype, float32, ndarray, uint32
+from numpy import zeros, dtype, float32, ndarray, uint32, uint8
 
 from ..Log import PrintLog, LogColors
 
@@ -21,12 +21,18 @@ class IGameObject:
 	getStatusAllocated: Callable[[], bool]
 	allocateIndex: Callable[[], None]
 	deallocateIndex: Callable[[], None]
+	getAllocatableComponentCount: Callable[[], int]
+	appendAllocatableComponent: Callable[[], None]
+	removeAllocatableComponent: Callable[[], None]
 	def __init__(self,
 		gameObject: GameObjectInterface, 
 		id: int, getAllocateIndex: Callable[[], int], 
 		getStatusAllocated: Callable[[], bool], 
 		allocateIndex: Callable[[], None],
-		deallocateIndex: Callable[[], None]
+		deallocateIndex: Callable[[], None],
+		getAllocatableComponentCount: Callable[[], int],
+		appendAllocatableComponent: Callable[[], None],
+		removeAllocatableComponent: Callable[[], None]
 	) -> None:
 		self.gameObject = gameObject
 		self.id = id
@@ -34,6 +40,9 @@ class IGameObject:
 		self.getStatusAllocated = getStatusAllocated
 		self.allocateIndex = allocateIndex
 		self.deallocateIndex = deallocateIndex
+		self.getAllocatableComponentCount = getAllocatableComponentCount
+		self.appendAllocatableComponent = appendAllocatableComponent
+		self.removeAllocatableComponent = removeAllocatableComponent
 
 
 class SceneManagerSystem:
@@ -44,14 +53,16 @@ class SceneManagerSystem:
 
 	__NUMPY_ARRAY_TRANSFORMS_LINK_FREE_CELLS: Dict[int, Set[int]] = {}
 	__NUMPY_ARRAY_TRANSFORMS_LINK: Dict[int, ndarray[tuple[int, int, int],dtype[float32]]] = {}
-	__LIST_OF_REGISTERED_TRANSFORMS: Dict[int, List[int]] = {}
+	__LIST_OF_REGISTERED_TRANSFORMS: Dict[int, ndarray[tuple[int], dtype[uint8]]] = {}
 	__SSBO: Dict[int, uint32] = {}
 
 
 	__ENABLE_QUEUE_GAME_OBJECTS: Dict[int, bool] = {}
-	__IGAME_OBJECTS: Dict[int, Set[GameObjectInterface]] = {}
+	__GAME_OBJECTS: Dict[int, Set[GameObjectInterface]] = {}
 	__GAME_OBJECTS_BY_NAME: Dict[int, Dict[str, Set[GameObjectInterface]]] = {}
 	__GAME_OBJECTS_BY_TAG: Dict[int, Dict[str, Set[GameObjectInterface]]] = {}
+	__GAME_OBJECTS_CHILDREN: Dict[int, Dict[int, Set[GameObjectInterface]]] = {}
+	__GAME_OBJECTS_PARENTS: Dict[int, Dict[int, int]] = {}
 
 
 
@@ -61,13 +72,15 @@ class SceneManagerSystem:
 
 		cls.__NUMPY_ARRAY_TRANSFORMS_LINK_FREE_CELLS[window_id] = set(range(SSBO_LIMIT))
 		cls.__NUMPY_ARRAY_TRANSFORMS_LINK[window_id] = zeros((SSBO_LIMIT, 2, 16), dtype=float32)
-		cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id] = []
+		cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id] = zeros(SSBO_LIMIT, dtype= bool)
 		cls.__SSBO[window_id] = CreateSSBOBuffer(SSBO_INDEX, zeros((SSBO_LIMIT,2,16), dtype= float32))
 
 		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = True
-		cls.__IGAME_OBJECTS[window_id] = set()
+		cls.__GAME_OBJECTS[window_id] = set()
 		cls.__GAME_OBJECTS_BY_NAME[window_id] = {}
 		cls.__GAME_OBJECTS_BY_TAG[window_id] = {}
+		cls.__GAME_OBJECTS_CHILDREN[window_id] = {}
+		cls.__GAME_OBJECTS_PARENTS[window_id] = {}
 
 	@classmethod
 	def WindowFlush(cls, window_id: int) -> None:
@@ -76,14 +89,14 @@ class SceneManagerSystem:
 		cls.__ACTIVE_SCENE[window_id] = None
 
 		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = True
-		go = cls.__IGAME_OBJECTS[window_id]
+		go = cls.__GAME_OBJECTS[window_id]
 		for gameObject in go:
 			gameObject.Destroy()
 		go.clear()
 		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = False
 
 		cls.__NUMPY_ARRAY_TRANSFORMS_LINK_FREE_CELLS[window_id] = set(range(SSBO_LIMIT))
-		cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id].clear()
+		cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id].fill(False)
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
@@ -93,7 +106,7 @@ class SceneManagerSystem:
 			cls.__ACTIVE_SCENE[window_id] = None
 
 		cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id] = False
-		for gameObject in cls.__IGAME_OBJECTS[window_id]:
+		for gameObject in cls.__GAME_OBJECTS[window_id]:
 			gameObject.Destroy()
 		cls.__ENABLE_QUEUE_GAME_OBJECTS.pop(window_id, None)
 
@@ -103,15 +116,17 @@ class SceneManagerSystem:
 		ssbo = cls.__SSBO.pop(window_id)
 		DestroySSBOBuffer(ssbo)
 
-		cls.__IGAME_OBJECTS.pop(window_id, None)
+		cls.__GAME_OBJECTS.pop(window_id, None)
 		cls.__GAME_OBJECTS_BY_NAME.pop(window_id, None)
 		cls.__GAME_OBJECTS_BY_TAG.pop(window_id, None)
+		cls.__GAME_OBJECTS_CHILDREN.pop(window_id, None)
+		cls.__GAME_OBJECTS_PARENTS.pop(window_id, None)
 		cls.__ACTIVE_SCENE.pop(window_id, None)
 
 	@classmethod
 	def UpdateBuffer(cls, window_id: int) -> int:
-		transforms = cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id]
-		UpdateSSBOBuffer(cls.__SSBO[window_id], cls.__NUMPY_ARRAY_TRANSFORMS_LINK[window_id][transforms])
+		transforms = cls.__NUMPY_ARRAY_TRANSFORMS_LINK[window_id][cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id]]
+		UpdateSSBOBuffer(cls.__SSBO[window_id], transforms)
 		return len(transforms)
 
 
@@ -171,13 +186,13 @@ class SceneManagerSystem:
 		s = cls.__NUMPY_ARRAY_TRANSFORMS_LINK_FREE_CELLS[window_id]
 		if(s):
 			index = s.pop()
-			cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id].append(index)
+			cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id][index] = True
 			return index
 		return -1
 
 	@classmethod
 	def DeallocateIndex(cls, index: int, window_id: int) -> None:
-		cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id].remove(index)
+		cls.__LIST_OF_REGISTERED_TRANSFORMS[window_id][index] = False
 		cls.__NUMPY_ARRAY_TRANSFORMS_LINK_FREE_CELLS[window_id].add(index)
 
 
@@ -185,7 +200,7 @@ class SceneManagerSystem:
 	def AppendGameObject(cls, gameObject: GameObjectInterface, name: str, tag: str, window_id: int) -> bool:
 		if(not cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id]): return False
 
-		cls.__IGAME_OBJECTS[window_id].add(gameObject)
+		cls.__GAME_OBJECTS[window_id].add(gameObject)
 
 		in_window_by_name = cls.__GAME_OBJECTS_BY_NAME[window_id]
 		if(name not in in_window_by_name): in_window_by_name[name] = set([gameObject])
@@ -195,13 +210,17 @@ class SceneManagerSystem:
 		if(tag not in in_window_by_tag): in_window_by_tag[tag] = set([gameObject])
 		else: in_window_by_tag[tag].add(gameObject)
 
+		gameObject_id = gameObject.GetId()
+		cls.__GAME_OBJECTS_CHILDREN[window_id][gameObject_id] = set()
+		cls.__GAME_OBJECTS_PARENTS[window_id][gameObject_id] = 0
+
 		return True
 
 	@classmethod
 	def RemoveGameObject(cls, gameObject: GameObjectInterface, name: str, tag: str, window_id: int) -> None:
 		if(not cls.__ENABLE_QUEUE_GAME_OBJECTS[window_id]): return
 
-		cls.__IGAME_OBJECTS[window_id].remove(gameObject)
+		cls.__GAME_OBJECTS[window_id].remove(gameObject)
 
 		in_window_by_name = cls.__GAME_OBJECTS_BY_NAME[window_id]
 		by_name = in_window_by_name[name]
@@ -212,6 +231,32 @@ class SceneManagerSystem:
 		by_tag = in_window_by_tag[tag]
 		by_tag.remove(gameObject)
 		if(not by_tag): in_window_by_tag.pop(tag, None)
+
+
+		gameObject_id = gameObject.GetId()
+		childs = cls.__GAME_OBJECTS_CHILDREN[window_id]
+		for child in childs[gameObject_id]:
+			child.Destroy()
+		childs.pop(gameObject_id)
+
+		gameObject_parent_id = cls.__GAME_OBJECTS_PARENTS[window_id][gameObject_id]
+		if(not gameObject_parent_id): return
+		cls.__GAME_OBJECTS_CHILDREN[window_id][gameObject_parent_id].discard(gameObject)
+
+	
+
+	@classmethod
+	def AppendChildToGameObject(cls, gameObject_parent: GameObjectInterface, gameObject_child: GameObjectInterface, window_id: int) -> None:
+		cls.__GAME_OBJECTS_CHILDREN[window_id][gameObject_parent.GetId()].add(gameObject_child)
+
+	@classmethod
+	def RemoveChildFromGameObject(cls, gameObject_parent: GameObjectInterface, gameObject_child: GameObjectInterface, window_id: int) -> None:
+		cls.__GAME_OBJECTS_CHILDREN[window_id][gameObject_parent.GetId()].discard(gameObject_child)
+
+	@classmethod
+	def SetParentToGameObject(cls, gameObject_child_id: int, gameObject_parent_id: int, window_id: int) -> None:
+		cls.__GAME_OBJECTS_PARENTS[window_id][gameObject_child_id] = gameObject_parent_id
+
 
 
 	@classmethod

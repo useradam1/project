@@ -33,7 +33,7 @@ class GameObject(GameObjectInterface):
 
 
 
-	def __init__(self, name: str, tag: str, transform: Transform, components: List[ComponentInterface]) -> None:
+	def __init__(self, name: str, tag: str, transform: Transform, components: List[ComponentInterface], childrens: List[GameObjectInterface]) -> None:
 		self.__ID = id(self)
 		self.__STATUS_EXIST = False
 
@@ -55,10 +55,13 @@ class GameObject(GameObjectInterface):
 		self.__IGAME_OBJECT = IGameObject(
 			gameObject= self,
 			id= self.__ID,
-			getAllocateIndex= self.GetAllocateIndex,
-			getStatusAllocated= self.GetStatusAllocated,
-			allocateIndex= self.AllocateIndex,
-			deallocateIndex= self.DeallocateIndex
+			getAllocateIndex= self.__GetAllocateIndex,
+			getStatusAllocated= self.__GetStatusAllocated,
+			allocateIndex= self.__AllocateIndex,
+			deallocateIndex= self.__DeallocateIndex,
+			getAllocatableComponentCount= self.__GetAllocatableComponentCount,
+			appendAllocatableComponent= self.__AppendAllocatableComponent,
+			removeAllocatableComponent= self.__RemoveAllocatableComponent
 		)
 		if(not SceneManagerSystem.AppendGameObject(self, self.__NAME, self.__TAG, self.__WINDOW_ID)):
 			del self.__IGAME_OBJECT
@@ -70,6 +73,9 @@ class GameObject(GameObjectInterface):
 
 		for component in components:
 			ComponentManagerSystem.InitializationComponent(component.GetId(), self.__IGAME_OBJECT, self.__WINDOW_ID)
+
+		for children in childrens:
+			children.SetParent(self)
 	
 	
 	def __del__(self) -> None:
@@ -78,7 +84,7 @@ class GameObject(GameObjectInterface):
 
 	def Destroy(self) -> None:
 		if(self.__STATUS_EXIST):
-			self.DeallocateIndex()
+			self.__DeallocateIndex()
 			ComponentManagerSystem.DestroyComponentInGameObject(self.__ID, self.__WINDOW_ID)
 			SceneManagerSystem.RemoveGameObject(self, self.__NAME, self.__TAG, self.__WINDOW_ID)
 			del self.__IGAME_OBJECT
@@ -97,13 +103,13 @@ class GameObject(GameObjectInterface):
 		return self.__STATUS_EXIST
 
 
-	def GetAllocateIndex(self) -> int:
+	def __GetAllocateIndex(self) -> int:
 		return self.__ALLOCATE_INDEX
 	
-	def GetStatusAllocated(self) -> bool:
+	def __GetStatusAllocated(self) -> bool:
 		return self.__STATUS_ALLOCATED
 	
-	def AllocateIndex(self) -> None:
+	def __AllocateIndex(self) -> None:
 		if(self.__STATUS_ALLOCATED): return
 		self.__ALLOCATE_INDEX = SceneManagerSystem.AllocateIndex(self.__WINDOW_ID)
 		if(self.__ALLOCATE_INDEX == -1):
@@ -118,7 +124,7 @@ class GameObject(GameObjectInterface):
 			self.transform.LinkMemoryLocalTRS(numpy_array[self.__ALLOCATE_INDEX][1],0)
 		self.__STATUS_ALLOCATED = True
 	
-	def DeallocateIndex(self) -> None:
+	def __DeallocateIndex(self) -> None:
 		if(not self.__STATUS_ALLOCATED): return
 		if(self.__HAS_PARENT):
 			self.transform.UnlinkMemoryGlobalSRT()
@@ -129,11 +135,11 @@ class GameObject(GameObjectInterface):
 		SceneManagerSystem.DeallocateIndex(self.__ALLOCATE_INDEX, self.__WINDOW_ID)
 		self.__STATUS_ALLOCATED = False
 	
-	def GetAllocatableComponentCount(self) -> int:
+	def __GetAllocatableComponentCount(self) -> int:
 		return self.__ALLOCATABLE_COMPONENT_COUNT
-	def AppendAllocatableComponent(self) -> None:
+	def __AppendAllocatableComponent(self) -> None:
 		self.__ALLOCATABLE_COMPONENT_COUNT += 1
-	def RemoveAllocatableComponent(self) -> None:
+	def __RemoveAllocatableComponent(self) -> None:
 		self.__ALLOCATABLE_COMPONENT_COUNT -= 1
 
 
@@ -152,15 +158,17 @@ class GameObject(GameObjectInterface):
 			self.__TAG = tag
 
 	def SetParent(self, parent: GameObjectInterface | None) -> None:
-		if(self.__HAS_PARENT == parent): return
 		if(self.__HAS_PARENT):
-			self.__TRANSFORM.SetParent(None)
 			if(self.__STATUS_ALLOCATED):
 				self.transform.UnlinkMemoryGlobalSRT()
 				self.transform.UnlinkMemoryGlobalTRS()
+			self.__TRANSFORM.SetParent(None)
+			SceneManagerSystem.RemoveChildFromGameObject(self.__PARENT, self, self.__WINDOW_ID) # type: ignore
+			SceneManagerSystem.SetParentToGameObject(self.__ID, 0, self.__WINDOW_ID)
 		else:
-			self.transform.UnlinkMemoryLocalSRT()
-			self.transform.UnlinkMemoryLocalTRS()
+			if(self.__STATUS_ALLOCATED):
+				self.transform.UnlinkMemoryLocalSRT()
+				self.transform.UnlinkMemoryLocalTRS()
 		self.__HAS_PARENT = (parent is not None)
 		if(self.__HAS_PARENT):
 			self.__TRANSFORM.SetParent(parent.transform) #type: ignore
@@ -168,10 +176,13 @@ class GameObject(GameObjectInterface):
 				numpy_array = SceneManagerSystem.GetAllocateNumpy(self.__WINDOW_ID)
 				self.transform.LinkMemoryGlobalSRT(numpy_array[self.__ALLOCATE_INDEX][0],0)
 				self.transform.LinkMemoryGlobalTRS(numpy_array[self.__ALLOCATE_INDEX][1],0)
+			SceneManagerSystem.AppendChildToGameObject(parent, self, self.__WINDOW_ID) # type: ignore
+			SceneManagerSystem.SetParentToGameObject(self.__ID, parent.GetId(), self.__WINDOW_ID) # type: ignore
 		else:
-			numpy_array = SceneManagerSystem.GetAllocateNumpy(self.__WINDOW_ID)
-			self.transform.LinkMemoryLocalSRT(numpy_array[self.__ALLOCATE_INDEX][0],0)
-			self.transform.LinkMemoryLocalTRS(numpy_array[self.__ALLOCATE_INDEX][1],0)
+			if(self.__STATUS_ALLOCATED):
+				numpy_array = SceneManagerSystem.GetAllocateNumpy(self.__WINDOW_ID)
+				self.transform.LinkMemoryLocalSRT(numpy_array[self.__ALLOCATE_INDEX][0],0)
+				self.transform.LinkMemoryLocalTRS(numpy_array[self.__ALLOCATE_INDEX][1],0)
 		self.__PARENT = parent
 	
 	def GetParent(self) -> Optional[GameObjectInterface]:

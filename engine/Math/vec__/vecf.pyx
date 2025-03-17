@@ -87,11 +87,13 @@ cdef class vec2_ptr_static(vec2):
 	def CreateCType(self) -> Array[c_float]:
 		return (c_float * <size_t>2).from_address(<size_t>&self._global_data_ptr[0][0])
 
-	def SetValues(self, float x, float y) -> None:
+	def SetValues(self, float x, float y) -> vec2_ptr_static:
 		print("Not allowed")
+		return self
 
-	def SetVector(self, vec2 value) -> None:
+	def SetVector(self, vec2 value) -> vec2_ptr_static:
 		print("Not allowed")
+		return self
 
 
 	@property
@@ -102,11 +104,11 @@ cdef class vec2_ptr_static(vec2):
 	def sqrMagnitude(self) -> float:
 		return vec2_sqrMagnitude(self._global_data_ptr, self._global_sqrMagnitude_ptr)
 
-	def Normalize(self) -> vec2:
+	def Normalize(self) -> vec2_ptr_static:
 		print("Not allowed")
 		return self
 
-	def NormalizeFrom(self, vec2 value) -> vec2:
+	def NormalizeFrom(self, vec2 value) -> vec2_ptr_static:
 		print("Not allowed")
 		return self
 
@@ -365,16 +367,18 @@ cdef class vec2:
 		return (c_float * <size_t>2).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y) -> None:
+	def SetValues(self, float x, float y) -> vec2:
 		self._global_data[0] = x
 		self._global_data[1] = y
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
-	def SetVector(self, vec2 value) -> None:
+	def SetVector(self, vec2 value) -> vec2:
 		vec2_set_vec2(self._global_data_ptr, value._global_data_ptr)
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
 
 	@property
@@ -878,24 +882,27 @@ cdef class mat2:
 
 	def SetValues(self,
 		float m11, float m12, 
-		float m21, float m22) -> None:
+		float m21, float m22) -> mat2:
 
 		self._global_data_ptr[0][0] = m11
 		self._global_data_ptr[1][0] = m12
 		self._global_data_ptr[2][0] = m21
 		self._global_data_ptr[3][0] = m22
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetMatrix(self, mat2 value) -> None:
+	def SetMatrix(self, mat2 value) -> mat2:
 		mat2_set_mat2(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> mat2:
 		self._global_data_ptr[0][0] = c_one_float
 		self._global_data_ptr[1][0] = c_zero_float
 		self._global_data_ptr[2][0] = c_zero_float
 		self._global_data_ptr[3][0] = c_one_float
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
 
 	@property
@@ -1451,17 +1458,19 @@ cdef class vec3:
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y, float z) -> None:
+	def SetValues(self, float x, float y, float z) -> vec3:
 		self._global_data[0] = x
 		self._global_data[1] = y
 		self._global_data[2] = z
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
-	def SetVector(self, vec3 value) -> None:
+	def SetVector(self, vec3 value) -> vec3:
 		vec3_set_vec3(self._global_data_ptr, value._global_data_ptr)
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
 
 	@property
@@ -2004,7 +2013,7 @@ cdef class mat3:
 	def SetValues(self,
 		float m11, float m12, float m13, 
 		float m21, float m22, float m23, 
-		float m31, float m32, float m33) -> None:
+		float m31, float m32, float m33) -> mat3:
 
 		self._global_data_ptr[0][0] = m11
 		self._global_data_ptr[1][0] = m12
@@ -2016,12 +2025,14 @@ cdef class mat3:
 		self._global_data_ptr[7][0] = m32
 		self._global_data_ptr[8][0] = m33
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetMatrix(self, mat3 value) -> None:
+	def SetMatrix(self, mat3 value) -> mat3:
 		mat3_set_mat3(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> mat3:
 		self._global_data_ptr[0][0] = c_one_float
 		self._global_data_ptr[1][0] = c_zero_float
 		self._global_data_ptr[2][0] = c_zero_float
@@ -2032,6 +2043,7 @@ cdef class mat3:
 		self._global_data_ptr[7][0] = c_zero_float
 		self._global_data_ptr[8][0] = c_one_float
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
 
 	@property
@@ -2633,7 +2645,7 @@ cdef class Rotation(mat3):
 	def SetValues(self,
 		float m11, float m12, float m13, 
 		float m21, float m22, float m23, 
-		float m31, float m32, float m33) -> None:
+		float m31, float m32, float m33) -> Rotation:
 
 		self._global_data_ptr[0][0] = m11
 		self._global_data_ptr[1][0] = m12
@@ -2645,12 +2657,14 @@ cdef class Rotation(mat3):
 		self._global_data_ptr[7][0] = m32
 		self._global_data_ptr[8][0] = m33
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetMatrix(self, mat3 value) -> None:
+	def SetMatrix(self, mat3 value) -> Rotation:
 		mat3_set_mat3(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> Rotation:
 		self._global_data_ptr[0][0] = c_one_float
 		self._global_data_ptr[1][0] = c_zero_float
 		self._global_data_ptr[2][0] = c_zero_float
@@ -2661,6 +2675,7 @@ cdef class Rotation(mat3):
 		self._global_data_ptr[7][0] = c_zero_float
 		self._global_data_ptr[8][0] = c_one_float
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
 
 	@property
@@ -3050,18 +3065,20 @@ cdef class vec4:
 		return (c_float * <size_t>4).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y, float z, float w) -> None:
+	def SetValues(self, float x, float y, float z, float w) -> vec4:
 		self._global_data[0] = x
 		self._global_data[1] = y
 		self._global_data[2] = z
 		self._global_data[3] = w
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
-	def SetVector(self, vec4 value) -> None:
+	def SetVector(self, vec4 value) -> vec4:
 		vec4_set_vec4(self._global_data_ptr, value._global_data_ptr)
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
+		return self
 
 
 	@property
@@ -3589,7 +3606,7 @@ cdef class mat4:
 		float m11, float m12, float m13, float m14, 
 		float m21, float m22, float m23, float m24, 
 		float m31, float m32, float m33, float m34,
-		float m41, float m42, float m43, float m44) -> None:
+		float m41, float m42, float m43, float m44) -> mat4:
 
 		self._global_data_ptr[0][0] = m11
 		self._global_data_ptr[1][0] = m12
@@ -3608,12 +3625,14 @@ cdef class mat4:
 		self._global_data_ptr[14][0] = m43
 		self._global_data_ptr[15][0] = m44
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetMatrix(self, mat4 value) -> None:
+	def SetMatrix(self, mat4 value) -> mat4:
 		mat4_set_mat4(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> mat4:
 		self._global_data_ptr[0][0] = c_one_float
 		self._global_data_ptr[1][0] = c_zero_float
 		self._global_data_ptr[2][0] = c_zero_float
@@ -3631,6 +3650,7 @@ cdef class mat4:
 		self._global_data_ptr[14][0] = c_zero_float
 		self._global_data_ptr[15][0] = c_one_float
 		self._global_determinant_ptr[0] = c_neg_one_float
+		return self
 
 
 	@property
@@ -4326,24 +4346,27 @@ cdef class mat4_ptr_static(mat4):
 		float m11, float m12, float m13, float m14, 
 		float m21, float m22, float m23, float m24, 
 		float m31, float m32, float m33, float m34,
-		float m41, float m42, float m43, float m44) -> None:
+		float m41, float m42, float m43, float m44) -> mat4_ptr_static:
 		print("Not allowed")
+		return self
 
-	def SetMatrix(self, mat4 value) -> None:
+	def SetMatrix(self, mat4 value) -> mat4_ptr_static:
 		print("Not allowed")
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> mat4_ptr_static:
 		print("Not allowed")
+		return self
 
 
 	@property
 	def determinant(self) -> float:
 		return mat4_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> mat4:
+	def Inverse(self) -> mat4_ptr_static:
 		print("Not allowed")
 		return self
-	def InverseFrom(self, mat4 value) -> mat4:
+	def InverseFrom(self, mat4 value) -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	@staticmethod
@@ -4352,10 +4375,10 @@ cdef class mat4_ptr_static(mat4):
 		mat4_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> mat4:
+	def Transpose(self) -> mat4_ptr_static:
 		print("Not allowed")
 		return self
-	def TransposeFrom(self, mat4 value) -> mat4:
+	def TransposeFrom(self, mat4 value) -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	@staticmethod
@@ -4409,7 +4432,7 @@ cdef class mat4_ptr_static(mat4):
 		mat4_abs_from(result._global_data_ptr, self._global_data_ptr)
 		return result
 
-	def __iadd__(self, value: 'allowed_types_mat4') -> mat4:
+	def __iadd__(self, value: 'allowed_types_mat4') -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	def __add__(self, value: 'allowed_types_mat4') -> mat4:
@@ -4424,7 +4447,7 @@ cdef class mat4_ptr_static(mat4):
 		float_add_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 	
-	def __isub__(self, value: 'allowed_types_mat4') -> mat4:
+	def __isub__(self, value: 'allowed_types_mat4') -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	def __sub__(self, value: 'allowed_types_mat4') -> mat4:
@@ -4439,7 +4462,7 @@ cdef class mat4_ptr_static(mat4):
 		float_sub_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 	
-	def __ipow__(self, value: 'allowed_types_mat4') -> mat4:
+	def __ipow__(self, value: 'allowed_types_mat4') -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	def __pow__(self, value: 'allowed_types_mat4') -> mat4:
@@ -4454,7 +4477,7 @@ cdef class mat4_ptr_static(mat4):
 		float_pow_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 
-	def __itruediv__(self, value: 'allowed_types_mat4') -> mat4:
+	def __itruediv__(self, value: 'allowed_types_mat4') -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	def __truediv__(self, value: 'allowed_types_mat4') -> mat4:
@@ -4469,7 +4492,7 @@ cdef class mat4_ptr_static(mat4):
 		float_truediv_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 	
-	def __ifloordiv__(self, value: 'allowed_types_mat4') -> mat4:
+	def __ifloordiv__(self, value: 'allowed_types_mat4') -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	def __floordiv__(self, value: 'allowed_types_mat4') -> mat4:
@@ -4484,7 +4507,7 @@ cdef class mat4_ptr_static(mat4):
 		float_floordiv_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 
-	def __imod__(self, value: 'allowed_types_mat4') -> mat4:
+	def __imod__(self, value: 'allowed_types_mat4') -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	def __mod__(self, value: 'allowed_types_mat4') -> mat4:
@@ -4499,7 +4522,7 @@ cdef class mat4_ptr_static(mat4):
 		float_mod_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 
-	def __imul__(self, value: 'allowed_types_mat4_mul') -> mat4:
+	def __imul__(self, value: 'allowed_types_mat4_mul') -> mat4_ptr_static:
 		print("Not allowed")
 		return self
 	def __mul__(self, value: 'allowed_types_mat4_mul') -> mat4:
@@ -4516,7 +4539,7 @@ cdef class mat4_ptr_static(mat4):
 		mat4_mul_float(result._global_data_ptr, self._global_data_ptr, value)
 		return result
 
-	def __imatmul__(self, mat4 value) -> mat4:
+	def __imatmul__(self, mat4 value) -> mat4_ptr_static:
 		print("Not allowed")
 		return self	
 	def __matmul__(self, value: 'allowed_types_mat4_matmul') -> Union[mat4, vec4]:
@@ -4618,11 +4641,13 @@ cdef class vec3_ptr_static(vec3):
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y, float z) -> None:
+	def SetValues(self, float x, float y, float z) -> vec3_ptr_static:
 		print("Not allowed")
+		return self
 
-	def SetVector(self, vec3 value) -> None:
+	def SetVector(self, vec3 value) -> vec3_ptr_static:
 		print("Not allowed")
+		return self
 
 
 	@property
@@ -4927,19 +4952,21 @@ cdef class GlobalTransformPosition(vec3):
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y, float z) -> None:
+	def SetValues(self, float x, float y, float z) -> GlobalTransformPosition:
 		self._local_data_ptr[0][0] = x
 		self._local_data_ptr[1][0] = y
 		self._local_data_ptr[2][0] = z
 		self._local_magnitude_ptr[0] = c_neg_one_float
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
-	def SetVector(self, vec3 value) -> None:
+	def SetVector(self, vec3 value) -> GlobalTransformPosition:
 		vec3_set_vec3(self._local_data_ptr, value._global_data_ptr)
 		self._local_magnitude_ptr[0] = c_neg_one_float
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
 
 	@property
@@ -5287,19 +5314,21 @@ cdef class GlobalTransformScale(vec3):
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y, float z) -> None:
+	def SetValues(self, float x, float y, float z) -> GlobalTransformScale:
 		self._local_data_ptr[0][0] = x
 		self._local_data_ptr[1][0] = y
 		self._local_data_ptr[2][0] = z
 		self._local_magnitude_ptr[0] = c_neg_one_float
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def SetVector(self, vec3 value) -> None:
+	def SetVector(self, vec3 value) -> GlobalTransformScale:
 		vec3_set_vec3(self._local_data_ptr, value._global_data_ptr)
 		self._local_magnitude_ptr[0] = c_neg_one_float
 		self._local_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 
 	@property
@@ -5677,7 +5706,7 @@ cdef class GlobalTransformRotation(Rotation):
 	def SetValues(self,
 		float m11, float m12, float m13, 
 		float m21, float m22, float m23, 
-		float m31, float m32, float m33) -> None:
+		float m31, float m32, float m33) -> GlobalTransformRotation:
 
 		self._local_data_ptr[0][0] = m11
 		self._local_data_ptr[1][0] = m12
@@ -5690,13 +5719,15 @@ cdef class GlobalTransformRotation(Rotation):
 		self._local_data_ptr[8][0] = m33
 		self._local_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def SetMatrix(self, mat3 value) -> None:
+	def SetMatrix(self, mat3 value) -> GlobalTransformRotation:
 		mat3_set_mat3(self._local_data_ptr, value._global_data_ptr)
 		self._local_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> GlobalTransformRotation:
 		self._local_data_ptr[0][0] = c_one_float
 		self._local_data_ptr[1][0] = c_zero_float
 		self._local_data_ptr[2][0] = c_zero_float
@@ -5708,6 +5739,7 @@ cdef class GlobalTransformRotation(Rotation):
 		self._local_data_ptr[8][0] = c_one_float
 		self._local_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 
 	@property
@@ -6033,19 +6065,21 @@ cdef class LocalTransformPosition(vec3):
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y, float z) -> None:
+	def SetValues(self, float x, float y, float z) -> LocalTransformPosition:
 		self._global_data[0] = x
 		self._global_data[1] = y
 		self._global_data[2] = z
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
-	def SetVector(self, vec3 value) -> None:
+	def SetVector(self, vec3 value) -> LocalTransformPosition:
 		vec3_set_vec3(self._global_data_ptr, value._global_data_ptr)
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_false_bool)
+		return self
 
 
 	@property
@@ -6389,19 +6423,21 @@ cdef class LocalTransformScale(vec3):
 		return (c_float * <size_t>3).from_address(<size_t>&self._global_data_ptr[0][0])
 
 
-	def SetValues(self, float x, float y, float z) -> None:
+	def SetValues(self, float x, float y, float z) -> LocalTransformScale:
 		self._global_data[0] = x
 		self._global_data[1] = y
 		self._global_data[2] = z
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def SetVector(self, vec3 value) -> None:
+	def SetVector(self, vec3 value) -> LocalTransformScale:
 		vec3_set_vec3(self._global_data_ptr, value._global_data_ptr)
 		self._global_magnitude_ptr[0] = c_neg_one_float
 		self._global_sqrMagnitude_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 
 	@property
@@ -6776,7 +6812,7 @@ cdef class LocalTransformRotation(Rotation):
 	def SetValues(self,
 		float m11, float m12, float m13, 
 		float m21, float m22, float m23, 
-		float m31, float m32, float m33) -> None:
+		float m31, float m32, float m33) -> LocalTransformRotation:
 
 		self._global_data_ptr[0][0] = m11
 		self._global_data_ptr[1][0] = m12
@@ -6789,13 +6825,15 @@ cdef class LocalTransformRotation(Rotation):
 		self._global_data_ptr[8][0] = m33
 		self._global_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def SetMatrix(self, mat3 value) -> None:
+	def SetMatrix(self, mat3 value) -> LocalTransformRotation:
 		mat3_set_mat3(self._global_data_ptr, value._global_data_ptr)
 		self._global_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> LocalTransformRotation:
 		self._global_data_ptr[0][0] = c_one_float
 		self._global_data_ptr[1][0] = c_zero_float
 		self._global_data_ptr[2][0] = c_zero_float
@@ -6807,6 +6845,7 @@ cdef class LocalTransformRotation(Rotation):
 		self._global_data_ptr[8][0] = c_one_float
 		self._global_determinant_ptr[0] = c_neg_one_float
 		TransformUpdateLocalMatrixSRT(self._transform, c_true_bool)
+		return self
 
 
 	@property
@@ -7129,24 +7168,27 @@ cdef class TransformMatrix(mat4):
 		float m11, float m12, float m13, float m14, 
 		float m21, float m22, float m23, float m24, 
 		float m31, float m32, float m33, float m34,
-		float m41, float m42, float m43, float m44) -> None:
+		float m41, float m42, float m43, float m44) -> TransformMatrix:
 		print("Not allowed")
+		return self
 
-	def SetMatrix(self, mat4 value) -> None:
+	def SetMatrix(self, mat4 value) -> TransformMatrix:
 		print("Not allowed")
+		return self
 
-	def SetIdentity(self) -> None:
+	def SetIdentity(self) -> TransformMatrix:
 		print("Not allowed")
+		return self
 
 
 	@property
 	def determinant(self) -> float:
 		return mat4_determinant(self._global_data_ptr, self._global_determinant_ptr)
 	
-	def Inverse(self) -> mat4:
+	def Inverse(self) -> TransformMatrix:
 		print("Not allowed")
 		return self
-	def InverseFrom(self, mat4 value) -> mat4:
+	def InverseFrom(self, mat4 value) -> TransformMatrix:
 		print("Not allowed")
 		return self
 	@staticmethod
@@ -7155,10 +7197,10 @@ cdef class TransformMatrix(mat4):
 		mat4_inverse_from(result._global_data_ptr, result._global_determinant_ptr, value._global_data_ptr, value._global_determinant_ptr)
 		return result
 
-	def Transpose(self) -> mat4:
+	def Transpose(self) -> TransformMatrix:
 		print("Not allowed")
 		return self
-	def TransposeFrom(self, mat4 value) -> mat4:
+	def TransposeFrom(self, mat4 value) -> TransformMatrix:
 		print("Not allowed")
 		return self
 	@staticmethod
@@ -7212,7 +7254,7 @@ cdef class TransformMatrix(mat4):
 		mat4_abs_from(result._global_data_ptr, self._global_data_ptr)
 		return result
 
-	def __iadd__(self, value: 'allowed_types_mat4') -> mat4:
+	def __iadd__(self, value: 'allowed_types_mat4') -> TransformMatrix:
 		print("Not allowed")
 		return self
 	def __add__(self, value: 'allowed_types_mat4') -> mat4:
@@ -7227,7 +7269,7 @@ cdef class TransformMatrix(mat4):
 		float_add_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 	
-	def __isub__(self, value: 'allowed_types_mat4') -> mat4:
+	def __isub__(self, value: 'allowed_types_mat4') -> TransformMatrix:
 		print("Not allowed")
 		return self
 	def __sub__(self, value: 'allowed_types_mat4') -> mat4:
@@ -7242,7 +7284,7 @@ cdef class TransformMatrix(mat4):
 		float_sub_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 	
-	def __ipow__(self, value: 'allowed_types_mat4') -> mat4:
+	def __ipow__(self, value: 'allowed_types_mat4') -> TransformMatrix:
 		print("Not allowed")
 		return self
 	def __pow__(self, value: 'allowed_types_mat4') -> mat4:
@@ -7257,7 +7299,7 @@ cdef class TransformMatrix(mat4):
 		float_pow_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 
-	def __itruediv__(self, value: 'allowed_types_mat4') -> mat4:
+	def __itruediv__(self, value: 'allowed_types_mat4') -> TransformMatrix:
 		print("Not allowed")
 		return self
 	def __truediv__(self, value: 'allowed_types_mat4') -> mat4:
@@ -7272,7 +7314,7 @@ cdef class TransformMatrix(mat4):
 		float_truediv_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 	
-	def __ifloordiv__(self, value: 'allowed_types_mat4') -> mat4:
+	def __ifloordiv__(self, value: 'allowed_types_mat4') -> TransformMatrix:
 		print("Not allowed")
 		return self
 	def __floordiv__(self, value: 'allowed_types_mat4') -> mat4:
@@ -7287,7 +7329,7 @@ cdef class TransformMatrix(mat4):
 		float_floordiv_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 
-	def __imod__(self, value: 'allowed_types_mat4') -> mat4:
+	def __imod__(self, value: 'allowed_types_mat4') -> TransformMatrix:
 		print("Not allowed")
 		return self
 	def __mod__(self, value: 'allowed_types_mat4') -> mat4:
@@ -7302,7 +7344,7 @@ cdef class TransformMatrix(mat4):
 		float_mod_mat4(result._global_data_ptr, value, self._global_data_ptr)
 		return result
 
-	def __imul__(self, value: 'allowed_types_mat4_mul') -> mat4:
+	def __imul__(self, value: 'allowed_types_mat4_mul') -> TransformMatrix:
 		print("Not allowed")
 		return self
 	def __mul__(self, value: 'allowed_types_mat4_mul') -> mat4:
@@ -7319,7 +7361,7 @@ cdef class TransformMatrix(mat4):
 		mat4_mul_float(result._global_data_ptr, self._global_data_ptr, value)
 		return result
 
-	def __imatmul__(self, mat4 value) -> mat4:
+	def __imatmul__(self, mat4 value) -> TransformMatrix:
 		print("Not allowed")
 		return self	
 	def __matmul__(self, value: 'allowed_types_mat4_matmul') -> Union[mat4, vec4]:

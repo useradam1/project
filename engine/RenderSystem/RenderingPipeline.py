@@ -5,7 +5,9 @@ from ..AssetsEngineSystem import AssetsEngineSystem
 
 from typing import Dict, Tuple, Callable
 
-
+from ..ApiWindow import GetCurrentTime
+from ..ApiGraphics import GetVersion
+from ..Profiler import Profiler
 
 class RenderingPipeline:
 
@@ -20,6 +22,8 @@ class RenderingPipeline:
 	__RTX_SHADER: Dict[int, Shader] = {}
 	__FRAME_BUFFER_RTX: Dict[int, FrameBuffer] = {}
 
+
+	__UPDATE_TIME: float = 0.0
 
 
 	@classmethod
@@ -80,6 +84,8 @@ class RenderingPipeline:
 		drawstatus = cls.__DRAW_STATUS[window_id]
 		if(not drawstatus.GetStatusSync()): return
 
+		#a = GetCurrentTime()
+
 		(
 			transfroms_count,
 			cameras_count,
@@ -88,7 +94,10 @@ class RenderingPipeline:
 		) = (callback(window_id) for callback in ssbo_callbacks)
 		MaterialControllerSystem.CheckQueueChange(window_id)
 
-		#print(transfroms_count, cameras_count, procedurals_count)
+		# b = GetCurrentTime()
+		# Profiler.AppendData(
+		# 	data_name= f"{window_id} ssbo Update",
+		# 	data_value= b-a)
 
 
 		frame_id = cls.__FRAME_ID[window_id]
@@ -116,6 +125,7 @@ class RenderingPipeline:
 		#final_texture.FillWithColor(( 0.0 , 0.0 , 0.0 , 0.0 ))
 
 		shader = cls.__RTX_SHADER[window_id].StartUseProgram().GetShaderData()
+		shader.SetUniformInt_one("FRAME_ID", frame_id)
 		shader.SetUniformInt_one("TRANSFORMS_COUNT", transfroms_count)
 		shader.SetUniformInt_one("CAMERAS_COUNT", cameras_count)
 		shader.SetUniformInt_one("PROCEDURALS_COUNT", procedurals_count)
@@ -131,3 +141,10 @@ class RenderingPipeline:
 		drawstatus.SetSync()
 		RenderNOW()
 		frame_id += 1
+		cls.__FRAME_ID[window_id] = frame_id
+
+		# b = GetCurrentTime()
+		# Profiler.AppendData(
+		# 	data_name= f"{window_id} Render",
+		# 	data_value= b-cls.__UPDATE_TIME)
+		# cls.__UPDATE_TIME = b
