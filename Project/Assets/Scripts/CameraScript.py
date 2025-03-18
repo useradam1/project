@@ -1,5 +1,7 @@
 from engine import *
+from .InputSystem import InputSystem
 
+from typing import List
 
 class CameraScript(ScriptBase):
 
@@ -8,14 +10,13 @@ class CameraScript(ScriptBase):
 	__HALF_HEIGHT_SCREEN: int
 	__DIREVTION_VELOCITY: vec3
 
-	__PARENT_TRANSFORM: Transform
-
-
-	__BUTTON_PRESSED_FOR_CREATE: bool
-
 	__BUTTON_PRESSED_IN_WINDOW: int
 
 	__LIGHT_MATERIAL: Material
+
+	__CREATED_OBJECTS: List[GameObject]
+
+	__CAMERA: Camera
 
 
 	def __init__(self, light_material: Material) -> None:
@@ -23,10 +24,11 @@ class CameraScript(ScriptBase):
 		self.__HALF_WIDTH_SCREEN = 1
 		self.__HALF_HEIGHT_SCREEN = 1
 		self.__DIREVTION_VELOCITY = vec3()
-		self.__BUTTON_PRESSED_FOR_CREATE = False
 		self.__BUTTON_PRESSED_IN_WINDOW = 0
 
 		self.__LIGHT_MATERIAL = light_material
+
+		self.__CREATED_OBJECTS = []
 
 
 	def _OnStart(self) -> None:
@@ -38,6 +40,7 @@ class CameraScript(ScriptBase):
 		self.__HALF_WIDTH_SCREEN = int(size.x*0.5)
 		self.__HALF_HEIGHT_SCREEN = int(size.y*0.5)
 
+
 	def __CallBack(self, width: int, height: int) -> None:
 		self.__HALF_WIDTH_SCREEN = int(width*0.5)
 		self.__HALF_HEIGHT_SCREEN = int(height*0.5)
@@ -47,6 +50,11 @@ class CameraScript(ScriptBase):
 
 
 	def _OnFixedUpdate(self, dt: float) -> None:
+		InputSystem.Update()
+		InputSystem.RegisterKey("c")
+		InputSystem.RegisterKey("z")
+		InputSystem.RegisterKey("r")
+		InputSystem.RegisterKey("t")
 
 		if(self.__BUTTON_PRESSED_IN_WINDOW):
 			self.__Movement(dt)
@@ -54,6 +62,7 @@ class CameraScript(ScriptBase):
 		if(self.__WINDOW.InFocus() and not self.__BUTTON_PRESSED_IN_WINDOW and KeyBoard.GetFunctionalKey("tab")):
 			self.__BUTTON_PRESSED_IN_WINDOW = 2
 			Mouse.SetPosition(self.__HALF_WIDTH_SCREEN, self.__HALF_HEIGHT_SCREEN)
+			self.__MOUSE_POSITION.SetValues(self.__HALF_WIDTH_SCREEN, self.__HALF_HEIGHT_SCREEN)
 		if(self.__BUTTON_PRESSED_IN_WINDOW == 2 and not KeyBoard.GetFunctionalKey("tab")):
 			self.__BUTTON_PRESSED_IN_WINDOW = 1
 		
@@ -61,6 +70,11 @@ class CameraScript(ScriptBase):
 			self.__BUTTON_PRESSED_IN_WINDOW = 3
 		if(self.__BUTTON_PRESSED_IN_WINDOW == 3 and not KeyBoard.GetFunctionalKey("tab")):
 			self.__BUTTON_PRESSED_IN_WINDOW = 0
+
+		if(InputSystem.IsKeyDown("r")):
+			RenderSettings.StartRender(2000)
+		if(InputSystem.IsKeyDown("t")):
+			RenderSettings.StopRender()
 		
 
 
@@ -94,30 +108,37 @@ class CameraScript(ScriptBase):
 
 		Mouse.SetPosition(self.__HALF_WIDTH_SCREEN, self.__HALF_HEIGHT_SCREEN)
 		self.__MOUSE_POSITION.SetValues(self.__HALF_WIDTH_SCREEN, self.__HALF_HEIGHT_SCREEN)
-		self.__MOUSE_POSITION.SetVector(Mouse.GetPosition())
+		#self.__MOUSE_POSITION.SetVector(Mouse.GetPosition())
 
-		if(not self.__BUTTON_PRESSED_FOR_CREATE and KeyBoard.GetKey("f")):
-			self.__BUTTON_PRESSED_FOR_CREATE = True
+		if(InputSystem.IsKeyDown("c")):
 			self.__CreateLight()
-		if(not KeyBoard.GetKey("f") and self.__BUTTON_PRESSED_FOR_CREATE):
-			self.__BUTTON_PRESSED_FOR_CREATE = False
+		if(InputSystem.IsKeyDown("z")):
+			self.__RemoveLight()
 	
+
+	def __RemoveLight(self) -> None:
+		if(len(self.__CREATED_OBJECTS)<=0): return
+		self.__CREATED_OBJECTS.pop().Destroy()
 
 
 	def __CreateLight(self) -> None:
-		GameObject(
-			name= "light",
-			tag= "Default",
-			transform= Transform(
-				self.transform.position + self.transform.forward * 5,
-				vec3( 0.1 , 0.1 , 4 ),
-				Rotation().SetMatrix(mat3.GetInverse(self.transform.rotation))
-			),
-			components= [
-				Procedural(
-					material= self.__LIGHT_MATERIAL,
-					type_procedural_object= "Cube"
-				)
-			],
-			childrens=[]
+		place_pos = self.transform.position + self.transform.forward * 5
+		self.__CREATED_OBJECTS.append(
+			GameObject(
+				name= "light",
+				tag= "Default",
+				transform= Transform(
+					place_pos,
+					#vec3(int(place_pos.x),int(place_pos.y),int(place_pos.z)),
+					vec3( 1 , 1 , 1 )*0.5,
+					Rotation()#.SetMatrix(mat3.GetInverse(self.transform.rotation))
+				),
+				components= [
+					Procedural(
+						material= self.__LIGHT_MATERIAL,
+						type_procedural_object= "Cube"
+					)
+				],
+				childrens=[]
+			)
 		)

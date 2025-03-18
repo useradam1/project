@@ -80,6 +80,7 @@ class FrameBuffer:
 
 	def ResetTextures(self) -> 'FrameBuffer':
 		ClearTextures2DFromFrameBuffer(self.__FBO, len(self.__REGISTERED_TEXTURES2D))
+		self.__REGISTERED_TEXTURES2D = ()
 		return self
 
 

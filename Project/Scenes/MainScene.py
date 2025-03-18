@@ -39,6 +39,10 @@ class MainScene(Scene):
 
 		self.__MaterialsForRoom()
 
+		self.light_created_material = Material(self.standart_shader, {
+			"color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"emmision": vec3( 	0.5	 , 	0.75	 , 	1	 ),
+		})
 		self.light_material = Material(self.standart_shader, {
 			"color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	1	 , 	1	 , 	1	 ),
@@ -60,13 +64,13 @@ class MainScene(Scene):
 
 	def Start(self) -> None:
 
-		self.Player = GameObject(
+		GameObject(
 			name= "Player",
 			tag= "Default",
 			transform= Transform(
-				vec3( 9 , 5 , -9 ),
+				vec3( 8 , -5 , -8 ),
 				vec3( 1 , 1 , 1 ),
-				Rotation().Ly(45)
+				Rotation()
 			),
 			components= [
 			],
@@ -75,13 +79,13 @@ class MainScene(Scene):
 					name= "MainCamera",
 					tag= "Default",
 					transform= Transform(
-						vec3( 0 , 0 , 0 ),
+						vec3( 0.25 , 0 , 0 ),
 						vec3( 1 , 1 , 1 ),
-						Rotation().Lx(-24)
+						Rotation()
 					),
 					components= [
 						CameraScript(
-							light_material= self.light_material
+							light_material= self.light_created_material
 						),
 						Camera(
 							mod= "perspective",
@@ -91,16 +95,45 @@ class MainScene(Scene):
 							left= -1,
 							right= 1,
 							bottom= -1,
-							top= 1
+							top= 1,
+							max_bounce_count= 10,
+							num_samples= 5,
+							exposure= 5
 						),
 					],
-					childrens=[]
-				)
+					childrens=[
+						# GameObject(
+						# 	name= "MainCamera",
+						# 	tag= "Default",
+						# 	transform= Transform(
+						# 		vec3( -0.5 , 0 , 0 ),
+						# 		vec3( 1 , 1 , 1 ),
+						# 		Rotation()
+						# 	),
+						# 	components= [
+						# 		Camera(
+						# 			mod= "perspective",
+						# 			fov= 100,
+						# 			near= 0.1,
+						# 			far= 1000,
+						# 			left= -1,
+						# 			right= 1,
+						# 			bottom= -1,
+						# 			top= 1,
+						# 			max_bounce_count= 10,
+						# 			num_samples= 5,
+						# 			exposure= 5
+						# 		),
+						# 	],
+						# 	childrens=[]
+						# )
+					]
+				),
 			]
 		)
 
 
-		self.room = GameObject(
+		GameObject(
 			name= "room",
 			tag= "Default",
 			transform= Transform(

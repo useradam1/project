@@ -22,8 +22,9 @@ from .Texture.CreateTexture import CreateTexture2D, CreateTexture3D
 from .Texture.DestroyTexture import DestroyTexture
 from .Texture.UpdateTexture import UpdateTexture2D, ClearTexture2D, FillTexture2DWithColor
 from .Texture.UpdateTexture import UpdateTexture3D, ClearTexture3D, FillTexture3DWithColor
-from .Texture.UpdateTexture import UpdateTexture2DFloat, ClearTexture2DFloat, FillTexture2DWithColorFloat
+from .Texture.UpdateTexture import UpdateTexture2DFloat, ClearTexture2DFloat, FillTexture2DFloatWithColor
 from .Texture.UpdateTexture import UpdateTexture3DFloat, ClearTexture3DFloat, FillTexture3DWithColorFloat
+from .Texture.CopyImageSubData import CopyImageSubDataTexture2DAny
 
 from .FrameBuffer.CreateFrameBuffer import CreateFrameBuffer, BindFrameBuffer
 from .FrameBuffer.DestroyFrameBuffer import DestroyFrameBuffer

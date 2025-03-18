@@ -5,6 +5,7 @@ from .Profiler import Profiler
 
 from .WindowSystem.Controllers.KeyBoard import KeyboardSystem
 from .WindowSystem.Controllers.Mouse import MouseSystem
+from .UiSystem import UiSystem
 
 from .RenderSystem import CameraController
 from .RenderSystem import ProceduralController
@@ -30,8 +31,11 @@ def WindowInitialization(window_id: int) -> None:
 		VERSION_PRINTED = True
 	KeyboardSystem.WindowInitialization(window_id)
 	MouseSystem.WindowInitialization(window_id)
+	#UiSystem.WindowInitialization(window_id)
+
 	CameraController.WindowInitialization(window_id)
 	ProceduralController.WindowInitialization(window_id)
+
 	BindTextureController.WindowInitialization(window_id)
 	GpuResourceManagerSystem.WindowInitialization(window_id)
 	ShaderContext.WindowInitialization(window_id)
@@ -42,6 +46,7 @@ def WindowInitialization(window_id: int) -> None:
 	SceneManagerSystem.WindowInitialization(window_id)
 	RenderingPipeline.WindowInitialization(window_id)
 
+
 def WindowFlush(window_id: int) -> None:
 	SceneManagerSystem.WindowFlush(window_id)
 	ComponentManagerSystem.WindowFlush(window_id)
@@ -49,8 +54,12 @@ def WindowFlush(window_id: int) -> None:
 	MaterialControllerSystem.WindowFlush(window_id)
 	GpuResourceManagerSystem.WindowFlush(window_id)
 	BindTextureController.WindowFlush(window_id)
+
 	ProceduralController.WindowFlush(window_id)
 	CameraController.WindowFlush(window_id)
+
+	#UiSystem.WindowFlush(window_id)
+
 
 def WindowTerminate(window_id: int) -> None:
 	RenderingPipeline.WindowTerminate(window_id)
@@ -62,8 +71,11 @@ def WindowTerminate(window_id: int) -> None:
 	ShaderContext.WindowTerminate(window_id)
 	GpuResourceManagerSystem.WindowTerminate(window_id)
 	BindTextureController.WindowTerminate(window_id)
+
 	ProceduralController.WindowTerminate(window_id)
 	CameraController.WindowTerminate(window_id)
+
+	#UiSystem.WindowTerminate(window_id)
 	MouseSystem.WindowTerminate(window_id)
 	KeyboardSystem.WindowTerminate(window_id)
 
@@ -88,7 +100,7 @@ def WindowUpdate(window_id: int, time: float) -> None:
 	# 	data_name= f"{window_id} UpdateSystem.Tick",
 	# 	data_value= b-a)
 
-	RenderingPipeline.RenderScene(
+	RenderingPipeline.ShowScene(
 		window_id, 
 		(
 			SceneManagerSystem.UpdateBuffer,
@@ -96,6 +108,8 @@ def WindowUpdate(window_id: int, time: float) -> None:
 			ProceduralController.UpdateBuffer
 		)
 	)
+
+	#UiSystem.ShowUi(window_id)
 
 
 

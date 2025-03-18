@@ -76,7 +76,7 @@ def ClearTexture2DFloat(texture_id: uint32, value: Tuple[float,float,float,float
 	glBindTexture(GL_TEXTURE_2D, 0)
 
 
-def FillTexture2DWithColorFloat(texture_id: uint32, color: Tuple[float,float,float,float]):
+def FillTexture2DFloatWithColor(texture_id: uint32, color: Tuple[float,float,float,float]):
 	# Привязываем текстуру
 	glBindTexture(GL_TEXTURE_2D, texture_id)
 
