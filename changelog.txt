@@ -1,1 +1,1 @@
-minor fixes related to SSBO. work has begun on creating an application for baking light
+A bug related to indexing transforms has been fixed, and a simple ray tracing mechanism has been implemented.

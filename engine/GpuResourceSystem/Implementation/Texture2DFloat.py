@@ -2,7 +2,7 @@ from ..GpuResourceSystem import GpuResourceManagerSystem, IGpuResource
 from ...WindowSystem import WindowContextSystem
 from ...UpdateSystem import Update
 from ...FlowControlSystem import FlowControlSystem
-from ...ApiGraphics import CreateTexture2D, ClearTexture2D, FillTexture2DWithColor, UpdateTexture2D, DestroyTexture, BindTexture2D_rgba8
+from ...ApiGraphics import CreateTexture2D, ClearTexture2DFloat, FillTexture2DFloatWithColor, UpdateTexture2DFloat, DestroyTexture, BindTexture2D_rgba32f
 from ...Loader import ReadImage2D, ImageData2D
 from .TextureController import BindTextureController, ITexture
 
@@ -13,6 +13,9 @@ from ...CustomMetaclass import TaskQueue
 
 from typing import TypedDict, List, Tuple
 from numpy import uint32, ndarray, dtype, uint8, zeros
+
+
+from .Texture2D import Texture2D
 
 
 nulluint32 = uint32(0)
@@ -28,7 +31,7 @@ def TextureDataLoad(thread_load_ram: ThreadLoad) -> None:
 	thread_load_ram['error_log'] = ReadImage2D(thread_load_ram['path'], thread_load_ram['image_data'])
 	thread_load_ram['ready'] = True
 
-class Texture2D:
+class Texture2DFoat(Texture2D):
 
 	__ID: int
 	__STATUS_EXIST: bool
@@ -80,7 +83,7 @@ class Texture2D:
 			return
 
 		self.__OBJECT = CreateTexture2D()
-		ClearTexture2D(self.__OBJECT, (0,0,0,0))
+		ClearTexture2DFloat(self.__OBJECT, (0,0,0,0))
 
 		self.__UPDATE = Update(self.__CheckQueue)
 		self.__UPDATE.enabled = False
@@ -135,7 +138,7 @@ class Texture2D:
 	def __setEmptyData(self, width: int, height: int) -> None:
 		self.__THREAD_LOAD_RAM['image_data'].SetEmptyData(width, height)
 
-	def SetEmptyData(self, width: int, height: int) -> 'Texture2D':
+	def SetEmptyData(self, width: int, height: int) -> 'Texture2DFoat':
 		if(not self.__THREAD_LOAD_RAM['ready']):
 			self.__TASK_QUEUE.add_task(self.__setEmptyData, width, height)
 			self.__UPDATE.enabled = True
@@ -149,7 +152,7 @@ class Texture2D:
 		self.__THREAD_LOAD_RAM['path'] = path
 		FlowControlSystem.CreateFrameProcessTask(TextureDataLoad, self.__THREAD_LOAD_RAM) #type: ignore
 
-	def LoadToRamFromPath(self, path: str) -> 'Texture2D':
+	def LoadToRamFromPath(self, path: str) -> 'Texture2DFoat':
 		if(not self.__THREAD_LOAD_RAM['ready']):
 			self.__TASK_QUEUE.add_task(self.__loadToRamFromPath, path)
 			self.__UPDATE.enabled = True
@@ -163,7 +166,7 @@ class Texture2D:
 		self.__THREAD_LOAD_RAM['error_log'] = ""
 		self.__THREAD_LOAD_RAM['ready'] = True
 
-	def LoadToRamFromImageData(self, data: ImageData2D) -> 'Texture2D':
+	def LoadToRamFromImageData(self, data: ImageData2D) -> 'Texture2DFoat':
 		if(not self.__THREAD_LOAD_RAM['ready']):
 			self.__TASK_QUEUE.add_task(self.__loadToRamFromImageData, data)
 			self.__UPDATE.enabled = True
@@ -177,7 +180,7 @@ class Texture2D:
 		self.__THREAD_LOAD_RAM['error_log'] = ""
 		self.__THREAD_LOAD_RAM['ready'] = True
 
-	def LoadToRamFromData(self, data: List[List[Tuple[float,float,float,float]]]) -> 'Texture2D':
+	def LoadToRamFromData(self, data: List[List[Tuple[float,float,float,float]]]) -> 'Texture2DFoat':
 		if(not self.__THREAD_LOAD_RAM['ready']):
 			self.__TASK_QUEUE.add_task(self.__loadToRamFromData, data)
 			self.__UPDATE.enabled = True
@@ -192,7 +195,7 @@ class Texture2D:
 		self.__THREAD_LOAD_RAM['ready'] = True
 		PrintLog(f"{self.__class__.__name__} Unload from the RAM memory is completed", LogColors.GREEN)
 
-	def UnloadRam(self) -> 'Texture2D':
+	def UnloadRam(self) -> 'Texture2DFoat':
 		if(not self.__THREAD_LOAD_RAM['ready']):
 			self.__TASK_QUEUE.add_task(self.__unloadRam)
 			self.__UPDATE.enabled = True
@@ -208,10 +211,10 @@ class Texture2D:
 		self.__DATA = self.__THREAD_LOAD_RAM['image_data'].GetData()
 		self.__HEIGHT = self.__THREAD_LOAD_RAM['image_data'].GetHeight()
 		self.__WIDTH = self.__THREAD_LOAD_RAM['image_data'].GetWidth()
-		UpdateTexture2D(self.__OBJECT, self.__DATA)
+		UpdateTexture2DFloat(self.__OBJECT, self.__DATA)
 		PrintLog(f"{self.__class__.__name__} Load to the GPU memory is completed", LogColors.GREEN)
 
-	def LoadToGpu(self) -> 'Texture2D':
+	def LoadToGpu(self) -> 'Texture2DFoat':
 		if(not self.__THREAD_LOAD_RAM['ready']):
 			self.__TASK_QUEUE.add_task(self.__loadToGpu)
 			self.__UPDATE.enabled = True
@@ -221,13 +224,13 @@ class Texture2D:
 
 
 	def __unloadGpu(self) -> None:
-		ClearTexture2D(self.__OBJECT, ( 0.0 , 0.0 , 0.0 , 0.0 ))
+		ClearTexture2DFloat(self.__OBJECT, ( 0.0 , 0.0 , 0.0 , 0.0 ))
 		self.__DATA = zeros((1, 1, 4), dtype=uint8)
 		self.__HEIGHT = 1
 		self.__WIDTH = 1
 		PrintLog(f"{self.__class__.__name__} Unload from the GPU memory is completed", LogColors.GREEN)
 
-	def UnloadGpu(self) -> 'Texture2D':
+	def UnloadGpu(self) -> 'Texture2DFoat':
 		if(not self.__THREAD_LOAD_RAM['ready']):
 			self.__TASK_QUEUE.add_task(self.__unloadGpu)
 			self.__UPDATE.enabled = True
@@ -236,7 +239,7 @@ class Texture2D:
 
 
 	def FillWithColor(self, color: Tuple[float,float,float,float]) -> None:
-		FillTexture2DWithColor(self.__OBJECT, color)
+		FillTexture2DFloatWithColor(self.__OBJECT, color)
 	
 
 	def Bind(self, link_number: int) -> None:
@@ -246,11 +249,11 @@ class Texture2D:
 			self.__BIND_NUMBER.link_number = -1
 			PrintLog(f"[ERROR_{self.__class__.__name__}] the link number is already in use: {link_number}")
 			return
-		BindTexture2D_rgba8(link_number, self.__OBJECT)
+		BindTexture2D_rgba32f(link_number, self.__OBJECT)
 	
 	def UnBind(self) -> None:
 		if(self.__BIND_NUMBER.link_number == -1): return
-		BindTexture2D_rgba8(self.__BIND_NUMBER.link_number, nulluint32)
+		BindTexture2D_rgba32f(self.__BIND_NUMBER.link_number, nulluint32)
 		self.__BIND_NUMBER.link_number = -1
 
 

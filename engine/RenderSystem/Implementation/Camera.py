@@ -1,9 +1,9 @@
-from ..SceneObjectsSystem import Component
-from ..WindowSystem import WindowContextSystem
-from ..Math import mat4, mat4_ptr_static, tan, deg2rad
+from ...SceneObjectsSystem import Component
+from ...WindowSystem import WindowContextSystem
+from ...Math import mat4, mat4_ptr_static, tan, deg2rad
 
 from .CameraController import CameraController
-from ..Log import LogColors, PrintLog
+from ...Log import LogColors, PrintLog
 
 from typing import Literal
 
@@ -23,6 +23,10 @@ class Camera(Component):
 	__TOP: float
 	__ASPECT: float
 
+	__MAX_BOUNCE_COUNT: int
+	__NUM_SAMPLES: int
+	__EXPOSURE: float
+
 	__PROJECTION: mat4
 	__PROJECTION_PTR: mat4_ptr_static
 
@@ -35,7 +39,11 @@ class Camera(Component):
 			left: float, 
 			right: float, 
 			bottom: float, 
-			top: float
+			top: float,
+
+			max_bounce_count: int,
+			num_samples: int,
+			exposure: float
 		) -> None:
 		self.__STATUS_ALLOCATED = False
 		self.__ALLOCATE_INDEX = -1
@@ -49,6 +57,10 @@ class Camera(Component):
 		self.__BOTTOM = bottom
 		self.__TOP = top
 		self.__ASPECT = 1.0
+
+		self.__MAX_BOUNCE_COUNT = max_bounce_count
+		self.__NUM_SAMPLES = num_samples
+		self.__EXPOSURE = exposure
 
 		self.__PROJECTION = mat4()
 		self.__PROJECTION_PTR = mat4_ptr_static()
@@ -93,9 +105,12 @@ class Camera(Component):
 		(self.__perspective_matrix() if(self.__MOD=='perspective') else self.__orthographic_matrix())
 
 		numpy_array = CameraController.GetAllocateNumpy(self._WINDOW_ID)
-		numpy_array[self.__ALLOCATE_INDEX]["transform_index"] = IgameObject.getAllocateIndex()
 		self.__PROJECTION.LinkMemory(numpy_array[self.__ALLOCATE_INDEX]["projection"],0)		
 		self.__PROJECTION_PTR.LinkMatrix(self.__PROJECTION)
+		numpy_array[self.__ALLOCATE_INDEX]["transform_index"] = IgameObject.getAllocateIndex()
+		numpy_array[self.__ALLOCATE_INDEX]["max_bounce_count"] = self.__MAX_BOUNCE_COUNT
+		numpy_array[self.__ALLOCATE_INDEX]["num_samples"] = self.__NUM_SAMPLES
+		numpy_array[self.__ALLOCATE_INDEX]["exposure"] = self.__EXPOSURE
 
 		IgameObject.appendAllocatableComponent()
 
@@ -125,6 +140,29 @@ class Camera(Component):
 		(self.__perspective_matrix() if(self.__MOD=='perspective') else self.__orthographic_matrix())
 
 
+	@property
+	def max_bounce_count(self) -> int:
+		return self.__MAX_BOUNCE_COUNT
+	@max_bounce_count.setter
+	def max_bounce_count(self, value: int) -> None:
+		self.__MAX_BOUNCE_COUNT = value
+		CameraController.GetAllocateNumpy(self._WINDOW_ID)[self.__ALLOCATE_INDEX]["max_bounce_count"] = value
+
+	@property
+	def num_samples(self) -> int:
+		return self.__NUM_SAMPLES
+	@num_samples.setter
+	def num_samples(self, value: int) -> None:
+		self.__NUM_SAMPLES = value
+		CameraController.GetAllocateNumpy(self._WINDOW_ID)[self.__ALLOCATE_INDEX]["num_samples"] = value
+
+	@property
+	def exposure(self) -> float:
+		return self.__EXPOSURE
+	@exposure.setter
+	def exposure(self, value: float) -> None:
+		self.__EXPOSURE = value
+		CameraController.GetAllocateNumpy(self._WINDOW_ID)[self.__ALLOCATE_INDEX]["exposure"] = value
 
 
 	@property

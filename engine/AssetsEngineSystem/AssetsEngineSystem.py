@@ -15,6 +15,7 @@ class Assets(TypedDict):
 	rtx_shader: Shader
 	standart_shader: Shader
 	texture_display_shader: Shader
+	noise_suppressor: Shader
 	final_display_texture: Texture2D
 	white_texture2d: Texture2D
 	missing_texture2d: Texture2D
@@ -64,6 +65,10 @@ class AssetsEngineSystem:
 			'texture_display_shader': Shader().LoadToGpu({
 				rf"{ASSETS_PATH}\Shaders\TextureShow\shader.frag": 'FRAGMENT_SHADER',
 				rf"{ASSETS_PATH}\Shaders\TextureShow\shader.vert": 'VERTEX_SHADER'
+			}),
+			'noise_suppressor': Shader().LoadToGpu({
+				rf"{ASSETS_PATH}\Shaders\NoiseSuppressor\shader.frag": 'FRAGMENT_SHADER',
+				rf"{ASSETS_PATH}\Shaders\NoiseSuppressor\shader.vert": 'VERTEX_SHADER'
 			}),
 			'final_display_texture': Texture2D(),
 			'white_texture2d': Texture2D().LoadToRamFromData([

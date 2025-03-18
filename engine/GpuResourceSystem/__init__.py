@@ -10,7 +10,8 @@ from .Implementation.Shader import Shader
 
 from .Implementation.Mesh import Mesh
 
-from .Implementation.Texture2D import Texture2D
 from .Implementation.TextureController import BindTextureController
+from .Implementation.Texture2D import Texture2D
+from .Implementation.Texture2DFloat import Texture2DFoat
 
 from .Implementation.FrameBuffer import FrameBuffer

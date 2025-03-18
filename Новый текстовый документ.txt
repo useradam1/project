@@ -121,7 +121,7 @@ class SceneManagerSystem:
 
 	@classmethod
 	def UpdateBuffer(cls, window_id: int) -> None:
-		UpdateSSBOBuffer(cls.__SSBO[window_id], cls.__NUMPY_ARRAY_TRANSFORMS_LINK[window_id])
+		UpdateSSBOBuffer(cls.__SSBO[window_id], cls.__NUMPY_ARRAY_TRANSFORMS_LINK[window_id][:])
 
 
 

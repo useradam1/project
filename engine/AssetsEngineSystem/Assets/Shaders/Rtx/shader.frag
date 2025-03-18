@@ -3,7 +3,7 @@ const float SHIFT = 0.001;
 layout(location = 0) out vec4 OutColor;
 in vec2 uv; // -1.0 to 1.0
 uint pixelIndex;
-uniform int FRAME_ID;
+uint rngState;
 
 struct Material {
 	vec4 color;
@@ -15,11 +15,13 @@ struct Transform {
 	mat4 srt_transform;
 	mat4 trs_transform;};
 layout(std430, binding = 40) buffer Transforms {Transform transforms[];};
-uniform int TRANSFORMS_COUNT;
 
 struct Camera {
 	mat4 projection;
-	int transform_index;};
+	int transform_index;
+	int max_bounce_count;
+	int num_samples;
+	float exposure;};
 layout(std430, binding = 41) buffer Cameras {Camera cameras[];};
 uniform int CAMERAS_COUNT;
 
@@ -39,15 +41,23 @@ uint hash3D(vec3 pos) {
     h ^= h >> 13;
     return h;
 }
-float Random(){
-	pixelIndex = pixelIndex * 747796405 + 2891336453;
-	uint result = ((pixelIndex >> ((pixelIndex >> 28) + 4)) ^ pixelIndex) * 277803737;
+float RandomNormal(){
+	rngState = rngState * 747796405 + 2891336453;
+	uint result = ((rngState >> ((rngState >> 28) + 4)) ^ rngState) * 277803737;
 	result = (result >> 22) ^ result;
 	return result / 4294967295.0;
 }
+float Random(){
+	return (RandomNormal()-0.5)*2.0;
+}
+#define PI 3.14159265359
+vec2 Random2DCircle(){
+	float t = Random() * PI;
+	return vec2(sin(t),cos(t)) * sqrt(RandomNormal());
+}
 float RandomNormalDistribution(){
-	float theta = 2 * 3.1415926 * Random();
-	float rho = sqrt(-2.0 * log(Random()));
+	float theta = 2 * 3.1415926 * RandomNormal();
+	float rho = sqrt(-2.0 * log(RandomNormal()));
 	return rho * cos(theta);
 }
 vec3 RandomShpereDirection(){
@@ -249,19 +259,17 @@ Intersect GetCloserProceduralIntersect(in Ray ray) {
 
 
 
-uniform int MAX_BOUNCE_COUNT;
 
-vec3 render(in Ray ray) {
+vec3 render(in Ray ray, in int max_bounce_count) {
 	vec3 final_color = vec3(0);
 	vec3 ray_color = vec3(1);
 
-	Intersect closer;
-	closer = GetCloserProceduralIntersect(ray);
+	Intersect closer = GetCloserProceduralIntersect(ray);
 	//pixelIndex += hash3D(closer.intersect_info.position);
 	//final_color = closer.intersect_info.normal;
 	//return final_color;
 
-	for(int i = 0; i < MAX_BOUNCE_COUNT; i++) {
+	for(int i = 0; i < max_bounce_count; i++) {
 		if(closer.is_intersect){
 			ray.ro = closer.intersect_info.position;
 			ray.rd = RandomHemisphereDirection(closer.intersect_info.normal);
@@ -278,13 +286,16 @@ vec3 render(in Ray ray) {
 }
 
 
+uniform int FRAME_ID;
 layout (binding = 0, rgba8) uniform image2D MainTexture;
 void main() {
 	ivec2 numPixels = ivec2(20000,20000);
 	ivec2 pixelCoord = ivec2(numPixels.x*uv.x,numPixels.y*uv.y);
-	pixelIndex = (pixelCoord.y * numPixels.x + pixelCoord.x) + FRAME_ID;
+	pixelIndex = (pixelCoord.y * numPixels.x + pixelCoord.x);
+	rngState = pixelIndex + FRAME_ID * 719393;
 
 	vec3 final_color = vec3(0);
+
 	for(int i = 0; i < CAMERAS_COUNT; i++) {
 		Camera camera = cameras[i];
 		Transform transform_camera = transforms[camera.transform_index];
@@ -300,13 +311,20 @@ void main() {
 			rd
 		);
 
-		int iterations = 5;
-		for(int i = 0; i < iterations; i++) {
-			final_color += render(ray);
+
+		vec3 render_color = vec3(0);
+		for(int i = 0; i < camera.num_samples; i++) {
+			render_color += render(ray, camera.max_bounce_count);
 		}
-		final_color /= float(iterations);
-		final_color *= 1;
+		render_color /= float(camera.num_samples);
+		//render_color = 1.0 - exp(-render_color * camera.exposure);
+
+
+		final_color += render_color * camera.exposure;
 	}
 	final_color /= CAMERAS_COUNT;
+	float weight = 1.0 / float(FRAME_ID+1);
+
+	final_color = imageLoad(MainTexture, ivec2(gl_FragCoord.xy)).xyz * (1.0-weight) + final_color * weight;
 	OutColor = vec4(final_color, 1.0);
 }

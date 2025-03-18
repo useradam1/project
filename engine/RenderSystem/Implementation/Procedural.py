@@ -1,12 +1,12 @@
-from ..SceneObjectsSystem import Component
-from ..WindowSystem import WindowContextSystem
+from ...SceneObjectsSystem import Component
+from ...WindowSystem import WindowContextSystem
 
 from .ProceduralController import ProceduralController, allowed_types, AllowedTypes
-from ..Log import LogColors, PrintLog
+from ...Log import LogColors, PrintLog
 
-from ..GpuResourceSystem import Material
+from ...GpuResourceSystem import Material
 
-from ..Math import vec2
+from ...Math import vec2
 
 from typing import Optional, Literal
 
