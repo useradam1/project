@@ -7,8 +7,11 @@ from .WindowSystem.Controllers.KeyBoard import KeyboardSystem
 from .WindowSystem.Controllers.Mouse import MouseSystem
 from .UiSystem import UiSystem
 
+from .GpuResourceSystem import TrianglesController
+from .GpuResourceSystem import BvhController
 from .RenderSystem import CameraController
 from .RenderSystem import ProceduralController
+from .RenderSystem import ProceduralMeshController
 
 from .GpuResourceSystem import BindTextureController
 from .GpuResourceSystem import GpuResourceManagerSystem
@@ -33,8 +36,11 @@ def WindowInitialization(window_id: int) -> None:
 	MouseSystem.WindowInitialization(window_id)
 	#UiSystem.WindowInitialization(window_id)
 
+	TrianglesController.WindowInitialization(window_id)
+	BvhController.WindowInitialization(window_id)
 	CameraController.WindowInitialization(window_id)
 	ProceduralController.WindowInitialization(window_id)
+	ProceduralMeshController.WindowInitialization(window_id)
 
 	BindTextureController.WindowInitialization(window_id)
 	GpuResourceManagerSystem.WindowInitialization(window_id)
@@ -55,8 +61,11 @@ def WindowFlush(window_id: int) -> None:
 	GpuResourceManagerSystem.WindowFlush(window_id)
 	BindTextureController.WindowFlush(window_id)
 
+	ProceduralMeshController.WindowFlush(window_id)
 	ProceduralController.WindowFlush(window_id)
 	CameraController.WindowFlush(window_id)
+	BvhController.WindowFlush(window_id)
+	TrianglesController.WindowFlush(window_id)
 
 	#UiSystem.WindowFlush(window_id)
 
@@ -72,8 +81,11 @@ def WindowTerminate(window_id: int) -> None:
 	GpuResourceManagerSystem.WindowTerminate(window_id)
 	BindTextureController.WindowTerminate(window_id)
 
+	ProceduralMeshController.WindowTerminate(window_id)
 	ProceduralController.WindowTerminate(window_id)
 	CameraController.WindowTerminate(window_id)
+	BvhController.WindowTerminate(window_id)
+	TrianglesController.WindowTerminate(window_id)
 
 	#UiSystem.WindowTerminate(window_id)
 	MouseSystem.WindowTerminate(window_id)
@@ -105,7 +117,10 @@ def WindowUpdate(window_id: int, time: float) -> None:
 		(
 			SceneManagerSystem.UpdateBuffer,
 			CameraController.UpdateBuffer,
-			ProceduralController.UpdateBuffer
+			ProceduralController.UpdateBuffer,
+			TrianglesController.UpdateBuffer,
+			BvhController.UpdateBuffer,
+			ProceduralMeshController.UpdateBuffer,
 		)
 	)
 

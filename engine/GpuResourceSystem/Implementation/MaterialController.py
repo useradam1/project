@@ -29,9 +29,9 @@ convertor: Dict[str, Callable[[str,int], Tuple[str, Union[int32, float32, uint32
 
 
 get_primitive = {
-	'bool': lambda x: x,
-	'int': lambda x: x,
-	'float': lambda x: x,
+	'bool': lambda x: bool(x),
+	'int': lambda x: int(x),
+	'float': lambda x: float(x),
 	'vec2': lambda x: x.CreateTuple(),
 	'vec3': lambda x: (x[0], x[1], x[2], 0),
 	'vec4': lambda x: x.CreateTuple(),
@@ -207,7 +207,7 @@ class MaterialControllerSystem:
 		desired_alignment = 16
 		padding_needed = (desired_alignment - (current_size % desired_alignment)) % desired_alignment
 		if padding_needed > 0: 
-			data.append(('padding', uint8, (1, 1, padding_needed)))
+			data.append(('__', uint8, (1, 1, padding_needed)))
 			material_dtype = dtype(data)
 
 		if(ssbo_index in dtype_material):

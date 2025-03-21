@@ -2,7 +2,7 @@ from .LoadCache import LoadData, SaveData, CACHE_DIR
 
 import os
 from dataclasses import dataclass
-from numpy import float32, int32, ndarray, dtype, array, min as npmin, max as npmax
+from numpy import float32, int32, ndarray, dtype, array, min as npmin, max as npmax, zeros
 from typing import List, Tuple
 
 
@@ -19,7 +19,7 @@ class MeshData:
 	__VERTICES: ndarray[tuple[int, int],dtype[float32]]
 	__NORMALS: ndarray[tuple[int, int],dtype[float32]]
 	__UV_COORDS: ndarray[tuple[int, int],dtype[float32]]
-	__FACES: ndarray[tuple[int, int],dtype[int32]]
+	__FACES: ndarray[tuple[int],dtype[int32]]
 
 	__COUNT_FACES: int
 	__MIN_VOLUME: Tuple[float,float,float]
@@ -39,7 +39,7 @@ class MeshData:
 	def GetVertices(self) -> ndarray[tuple[int, int],dtype[float32]]: return self.__VERTICES
 	def GetNormals(self) -> ndarray[tuple[int, int],dtype[float32]]: return self.__NORMALS
 	def GetUvCoords(self) -> ndarray[tuple[int, int],dtype[float32]]: return self.__UV_COORDS
-	def GetFaces(self) -> ndarray[tuple[int, int],dtype[int32]]: return self.__FACES
+	def GetFaces(self) -> ndarray[tuple[int],dtype[int32]]: return self.__FACES
 
 	def GetCountFaces(self) -> int: return self.__COUNT_FACES
 	def GetMinVolume(self) -> Tuple[float,float,float]: return self.__MIN_VOLUME
@@ -91,6 +91,7 @@ class MeshData:
 		self.__VN.clear()
 		self.__VT.clear()
 		self.__F.clear()
+
 
 
 

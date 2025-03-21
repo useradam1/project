@@ -9,47 +9,77 @@ class MainScene(Scene):
 
 	def __MaterialsForRoom(self) -> None:
 		self.flor = Material(self.standart_shader, {
-			"color": vec4( 	0.75 , 	0.75 , 	0.5	 , 	1	 ),
+			"diffuse_color": vec4( 	0.75 , 	0.75 , 	0.5	 , 	1	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+			"smoothness": vec3( 	0	 , 	0	 , 	0	 ),
+			"density": 1.0
 		})
 		self.cell = Material(self.standart_shader, {
-			"color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"diffuse_color": vec4( 	0.75	 , 	0.75	 , 	0.75	 , 	1	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+			"smoothness": vec3( 	0	 , 	0	 , 	0	 ),
+			"density": 1.0
 		})
 		self.left = Material(self.standart_shader, {
-			"color": vec4( 	0.5 , 	0.5	 , 	1	 , 	1	 ),
+			"diffuse_color": vec4( 	0.25 , 	1	 , 	0.25	 , 	1	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+			"smoothness": vec3( 	0	 , 	0	 , 	0	 ),
+			"density": 1.0
 		})
 		self.right = Material(self.standart_shader, {
-			"color": vec4( 	1	 , 	0.5	 , 	0.5	 , 	1	 ),
+			"diffuse_color": vec4( 	1	 , 	0.25	 , 	0.25	 , 	1	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+			"smoothness": vec3( 	0	 , 	0	 , 	0	 ),
+			"density": 1.0
 		})
 		self.forward = Material(self.standart_shader, {
-			"color": vec4( 	0.5	 , 	1	 , 	0.5	 , 	1	 ),
+			"diffuse_color": vec4( 	0.25	 , 	0.25	 , 	1	 , 	1	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+			"smoothness": vec3( 	0	 , 	0	 , 	0	 ),
+			"density": 1.0
 		})
 		self.back = Material(self.standart_shader, {
-			"color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"diffuse_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+			"smoothness": vec3( 	0	 , 	0	 , 	0	 ),
+			"density": 1.0
 		})
 
 
 	def Load(self) -> None:
+
+		self.mesh = Mesh().LoadBVH()
+
 		self.standart_shader = AssetsEngine.GetAssets()["rtx_shader"]
 
 		self.__MaterialsForRoom()
 
 		self.light_created_material = Material(self.standart_shader, {
-			"color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
-			"emmision": vec3( 	0.5	 , 	0.75	 , 	1	 ),
+			"diffuse_color": vec4( 	1	 , 	0.1	 , 	0.1	 , 	1	 ),
+			"specular_color": vec4( 	0.1	 , 	1	 , 	1	 , 	1	 ),
+			"emmision": vec3( 	0.5	 , 	0.75	 , 	1	 )*0,
+			"smoothness": vec3( 	0	 , 	1	 , 	0.15	 ),
+			"density": 2
 		})
 		self.light_material = Material(self.standart_shader, {
-			"color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
-			"emmision": vec3( 	1	 , 	1	 , 	1	 ),
+			"diffuse_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"emmision": vec3( 	1	 , 	1	 , 	1	 )*10,
+			"smoothness": vec3( 	0	 , 	0	 , 	0	 ),
+			"density": 1.0
 		})
 		self.wall_material = Material(self.standart_shader, {
-			"color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"diffuse_color": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+			"smoothness": vec3( 	1	 , 	0	 , 	0	 ),
+			"density": 2.0
 		})
 
 
@@ -79,7 +109,7 @@ class MainScene(Scene):
 					name= "MainCamera",
 					tag= "Default",
 					transform= Transform(
-						vec3( 0.25 , 0 , 0 ),
+						vec3( 0 , 0 , 0 ),
 						vec3( 1 , 1 , 1 ),
 						Rotation()
 					),
@@ -98,7 +128,7 @@ class MainScene(Scene):
 							top= 1,
 							max_bounce_count= 10,
 							num_samples= 5,
-							exposure= 5
+							iso= 1
 						),
 					],
 					childrens=[
@@ -251,7 +281,7 @@ class MainScene(Scene):
 			tag= "Default",
 			transform= Transform(
 				vec3( 0 , 9 , 0 ),
-				vec3( 2 , 1 , 2 ),
+				vec3( 3 , 0.1 , 3 ),
 				Rotation()
 			),
 			components= [
@@ -267,8 +297,8 @@ class MainScene(Scene):
 			name= "wall",
 			tag= "Default",
 			transform= Transform(
-				vec3( 0 , -9 , 5 ),
-				vec3( 5 , 5 , 1 ),
+				vec3( 0 , -7 , 4 ),
+				vec3( 5 , 3 , 0.1 ),
 				Rotation()
 			),
 			components= [
@@ -282,6 +312,22 @@ class MainScene(Scene):
 
 
 
+		GameObject(
+			name= "light",
+			tag= "Default",
+			transform= Transform(
+				vec3( 0 , -5 , 0 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation()
+			),
+			components= [
+				#RotareScript(),
+				ProceduralMesh(
+					material= self.light_material
+				)
+			],
+			childrens=[]
+		)
 
 
 

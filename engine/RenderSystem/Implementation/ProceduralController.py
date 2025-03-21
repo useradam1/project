@@ -8,9 +8,11 @@ SSBO_INDEX = 42
 SSBO_LIMIT = 100
 
 typedata = dtype([
-	("material_index_and_type_object", float32, (3)),
+	("material_index", int32, (1)),
+	("object_type", int32, (1)),
 	("transform_index", int32, (1)),
-], align=True)
+	("padding", int32, (1)),
+])
 
 
 AllowedTypes = Literal[

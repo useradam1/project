@@ -87,6 +87,7 @@ class RenderingPipeline:
 	def StopRender(cls, window_id: int) -> None:
 		cls.__RENDERING_RUN[window_id] = False
 		cls.__FRAME_ID[window_id] = 0
+		print("RENDER STOP")
 
 
 	@classmethod
@@ -94,8 +95,12 @@ class RenderingPipeline:
 			window_id: int, 
 			ssbo_callbacks: Tuple[
 				Callable[[int], None], 
-				Callable[[int], int], 
-				Callable[[int], int]
+				Callable[[int], int],
+				Callable[[int], int],
+
+				Callable[[int], None],
+				Callable[[int], None],
+				Callable[[int], int],
 			]
 		) -> None:
 
@@ -105,9 +110,14 @@ class RenderingPipeline:
 		#a = GetCurrentTime()
 
 		# отправка данных в gpu
-		transfroms_count = ssbo_callbacks[0](window_id)
+		ssbo_callbacks[0](window_id) #transfroms
 		cameras_count = ssbo_callbacks[1](window_id)
 		procedurals_count = ssbo_callbacks[2](window_id)
+
+		ssbo_callbacks[3](window_id) #triangles
+		ssbo_callbacks[4](window_id) #bvh
+		procedurals_meshes_count = ssbo_callbacks[5](window_id)
+
 		MaterialControllerSystem.CheckQueueChange(window_id)
 
 		# b = GetCurrentTime()
@@ -127,6 +137,7 @@ class RenderingPipeline:
 		plane.DrawMesh()
 
 
+		final_texture = cls.__FINAL_TEXTURE[window_id]
 
 
 		if(frame_id < cls.__QUALITY_LIMIT[window_id]):
@@ -142,6 +153,7 @@ class RenderingPipeline:
 			shader.SetUniformInt_one("FRAME_ID", frame_id)
 			shader.SetUniformInt_one("CAMERAS_COUNT", cameras_count)
 			shader.SetUniformInt_one("PROCEDURALS_COUNT", procedurals_count)
+			shader.SetUniformInt_one("PROCEDURALS_MESHES_COUNT", procedurals_meshes_count)
 			plane.DrawMesh()
 
 			rtx_fb.Unbind()
