@@ -21,5 +21,6 @@ from .AssetsEngineSystem import AssetsEngine
 
 from .RenderSystem import Camera
 from .RenderSystem import Procedural
+from .RenderSystem import ProceduralMesh
 
 from .RenderSystem import RenderSettings

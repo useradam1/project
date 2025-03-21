@@ -1,5 +1,6 @@
 from engine import *
 from .InputSystem import InputSystem
+from .RotareScript import RotareScript
 
 from typing import List
 
@@ -72,7 +73,7 @@ class CameraScript(ScriptBase):
 			self.__BUTTON_PRESSED_IN_WINDOW = 0
 
 		if(InputSystem.IsKeyDown("r")):
-			RenderSettings.StartRender(2000)
+			RenderSettings.StartRender(50000)
 		if(InputSystem.IsKeyDown("t")):
 			RenderSettings.StopRender()
 		
@@ -130,14 +131,15 @@ class CameraScript(ScriptBase):
 				transform= Transform(
 					place_pos,
 					#vec3(int(place_pos.x),int(place_pos.y),int(place_pos.z)),
-					vec3( 1 , 1 , 1 )*0.5,
+					vec3( 1 , 1 , 1 ),
 					Rotation()#.SetMatrix(mat3.GetInverse(self.transform.rotation))
 				),
 				components= [
 					Procedural(
 						material= self.__LIGHT_MATERIAL,
-						type_procedural_object= "Cube"
-					)
+						type_procedural_object= "Sphere"
+					),
+					#RotareScript()
 				],
 				childrens=[]
 			)

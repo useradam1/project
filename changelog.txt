@@ -1,1 +1,1 @@
-A bug related to indexing transforms has been fixed, and a simple ray tracing mechanism has been implemented.
+basic BVH has been added, so far only tests without loading 3d models
