@@ -5,7 +5,7 @@ from numpy import dtype, float32, int32, uint32, ndarray, zeros, uint8
 from ...ApiGraphics import CreateSSBOBuffer, UpdateSSBOBuffer, DestroySSBOBuffer
 
 SSBO_INDEX = 41
-SSBO_LIMIT = 1000
+SSBO_LIMIT = 5
 
 typedata = dtype([
 	("projection", float32, (16)),

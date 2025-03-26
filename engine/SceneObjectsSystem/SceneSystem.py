@@ -10,7 +10,7 @@ from ..Log import PrintLog, LogColors
 emptyset = set()
 
 SSBO_INDEX = 40
-SSBO_LIMIT = 1000
+SSBO_LIMIT = 100
 
 
 

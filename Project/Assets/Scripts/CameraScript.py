@@ -73,7 +73,7 @@ class CameraScript(ScriptBase):
 			self.__BUTTON_PRESSED_IN_WINDOW = 0
 
 		if(InputSystem.IsKeyDown("r")):
-			RenderSettings.StartRender(50000)
+			RenderSettings.StartRender(1000)
 		if(InputSystem.IsKeyDown("t")):
 			RenderSettings.StopRender()
 		

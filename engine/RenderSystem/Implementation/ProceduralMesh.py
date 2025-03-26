@@ -63,7 +63,6 @@ class ProceduralMesh(Component):
 		self.__NUMPY_ARRAY = ProceduralMeshController.GetAllocateNumpy(self._WINDOW_ID)
 		self.__NUMPY_ARRAY[self.__ALLOCATE_INDEX]["material_index"] = self.__MATERIAL_ID
 		self.__NUMPY_ARRAY[self.__ALLOCATE_INDEX]["bvh_index"] = 0
-		self.__NUMPY_ARRAY[self.__ALLOCATE_INDEX]["bvh_depth"] = 40
 		self.__NUMPY_ARRAY[self.__ALLOCATE_INDEX]["alignment_triangle_index"] = 0
 		self.__NUMPY_ARRAY[self.__ALLOCATE_INDEX]["transform_index"] = IgameObject.getAllocateIndex()
 

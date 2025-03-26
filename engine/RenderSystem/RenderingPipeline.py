@@ -1,9 +1,12 @@
 from ..ApiGraphics import RenderNOW, SetViewport, ClearColor, CheckDrawStatus, ClearDepthBuffer
+from ..ApiWindow import WindowSwapBuffers, window_type
 from ..WindowSystem import WindowContextSystem
 from ..GpuResourceSystem import Mesh, Shader, Texture2D, Texture2DFoat, FrameBuffer, MaterialControllerSystem
 from ..AssetsEngineSystem import AssetsEngineSystem
 
+from ..Math import vec2
 
+from ..WindowSystem.Controllers.KeyBoard import KeyBoard
 
 from typing import Dict, Tuple, Callable
 
@@ -27,6 +30,7 @@ class RenderingPipeline:
 	__FRAME_BUFFER_RTX: Dict[int, FrameBuffer] = {}
 
 
+	__WINDOW: Dict[int, window_type] = {}
 
 
 
@@ -62,6 +66,11 @@ class RenderingPipeline:
 		window_size = window.GetSize() # type: ignore
 		CallbackSize(int(window_size.x), int(window_size.y)) 
 
+		cls.__WINDOW[window_id] = window.GetWindowObject() # type: ignore
+
+
+		cls.debug = vec2(300,45)
+
 
 	@classmethod
 	def WindowTerminate(cls, window_id: int) -> None:
@@ -73,6 +82,8 @@ class RenderingPipeline:
 
 		cls.__RTX_SHADER.pop(window_id, None)
 		cls.__FRAME_BUFFER_RTX.pop(window_id, None)
+
+		cls.__WINDOW.pop(window_id, None)
 
 
 
@@ -104,8 +115,8 @@ class RenderingPipeline:
 			]
 		) -> None:
 
-		drawstatus = cls.__DRAW_STATUS[window_id]
-		if(not drawstatus.GetStatusSync()): return
+		#drawstatus = cls.__DRAW_STATUS[window_id]
+		#if(not drawstatus.GetStatusSync()): return
 
 		#a = GetCurrentTime()
 
@@ -124,6 +135,8 @@ class RenderingPipeline:
 		# Profiler.AppendData(
 		# 	data_name= f"{window_id} ssbo Update",
 		# 	data_value= b-a)
+
+
 
 
 		plane = cls.__PLANE_MESH[window_id]
@@ -154,6 +167,13 @@ class RenderingPipeline:
 			shader.SetUniformInt_one("CAMERAS_COUNT", cameras_count)
 			shader.SetUniformInt_one("PROCEDURALS_COUNT", procedurals_count)
 			shader.SetUniformInt_one("PROCEDURALS_MESHES_COUNT", procedurals_meshes_count)
+			# if(KeyBoard.GetKey("m")): cls.debug.x+=0.01
+			# if(KeyBoard.GetKey("n")): cls.debug.x=max(1,cls.debug.x-0.01)
+			# if(KeyBoard.GetKey("b")): cls.debug.y+=0.01
+			# if(KeyBoard.GetKey("v")): cls.debug.y=max(1,cls.debug.y-0.01)
+			# print(cls.debug, end="\r")
+			# shader.SetUniformFloat_one("TRIANGLE_HIT", cls.debug.x)
+			# shader.SetUniformFloat_one("BOX_HIT", cls.debug.y)
 			plane.DrawMesh()
 
 			rtx_fb.Unbind()
@@ -164,8 +184,9 @@ class RenderingPipeline:
 
 
 
-		drawstatus.SetSync()
-		RenderNOW()
+		#drawstatus.SetSync()
+		#RenderNOW()
+		WindowSwapBuffers(cls.__WINDOW[window_id])
 
 
 		if(frame_id > cls.__QUALITY_LIMIT[window_id] and cls.__RENDERING_RUN[window_id]):

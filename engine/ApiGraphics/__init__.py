@@ -31,6 +31,7 @@ from .FrameBuffer.DestroyFrameBuffer import DestroyFrameBuffer
 from .FrameBuffer.SetTextuerFrameBuffer import UpdateSizeFrameBuffer, SetTextures2DFrameBuffer, ClearTextures2DFromFrameBuffer
 
 from .SSBO.CreateSSBOBuffer import CreateSSBOBuffer
+from .SSBO.CreateStaticSSBOBuffer import CreateStaticSSBOBuffer
 from .SSBO.UpdateSSBOBuffer import UpdateSSBOBuffer
 from .SSBO.DestroySSBOBuffer import DestroySSBOBuffer
 

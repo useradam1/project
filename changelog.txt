@@ -1,1 +1,1 @@
-basic BVH has been added, so far only tests without loading 3d models
+The basic BVH implementation has been added. it is not dynamic. tagging (improve and optimize BVH)

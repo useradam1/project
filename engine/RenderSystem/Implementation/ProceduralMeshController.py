@@ -4,13 +4,12 @@ from numpy import dtype, float32, int32, uint32, ndarray, zeros, uint8
 
 from ...ApiGraphics import CreateSSBOBuffer, UpdateSSBOBuffer, DestroySSBOBuffer
 
-SSBO_INDEX = 45
-SSBO_LIMIT = 100
+SSBO_INDEX = 46
+SSBO_LIMIT = 5
 
 typedata = dtype([
 	("material_index", int32, (1)),
 	("bvh_index", int32, (1)),
-	("bvh_depth", int32, (1)),
 	("alignment_triangle_index", int32, (1)),
 	("transform_index", int32, (1)),
 ])
