@@ -6,6 +6,7 @@ from ...FlowControlSystem import FlowControlSystem
 from ...Loader import ReadObjData, MeshData
 
 from .BvhController import BvhController, bvh_data_dtype
+from .TrianglesController import TrianglesController, triangles_data_dtype
 
 from typing import TypedDict, List, Tuple
 from numpy import uint32, array, float32
@@ -240,10 +241,126 @@ class Mesh:
 	def DrawMeshInstanced(self, instanceCount: int) -> None:
 		if(self.__LOAD_STATUS_GPU):
 			DrawMeshInstanced(self.__OBJECT, instanceCount)
-	
 
 
-	def LoadBVH(self) -> None:
+	def __loadBvh(self) -> None:
+		if(self.__THREAD_LOAD_RAM['error_log']):
+			PrintLog(f"[ERROR_{self.__class__.__name__}] {self.__THREAD_LOAD_RAM['error_log']}", LogColors.RED)
+			return
+		meshes = self.__THREAD_LOAD_RAM['meshes']
+		if(len(meshes) == 0):
+			PrintLog(f"[ERROR_{self.__class__.__name__}] geometries are not loaded {self.__THREAD_LOAD_RAM['path']}", LogColors.RED)
+			return
+		mesh = meshes[-1]
+		#mesh.BuildBVH()
+		TrianglesController.AppendTriangles(self.__ID,
+			mesh.GetTriangleData(),
+			self.__WINDOW_ID
+		)
+		BvhController.AppendBVH(
+			mesh.GetBvhData(),
+			self.__WINDOW_ID
+		)
+		#print()
+		#print(len(mesh.GetBvhData()))
+		#print(len(mesh.GetTriangleData()))
+		# TrianglesController.AppendTriangles(self.__ID,
+		# 	array(
+		# 		[
+		# 			(
+		# 			(2, 6, -2, 0), (-2, 6, -2, 0), (0, 6, 2, 0),	# posA, posB, posC
+		# 			(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 			(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 			),
+		# 			(
+		# 			(2, 3, -2, 0), (-2, 3, -2, 0), (0, 3, 2, 0),	# posA, posB, posC
+		# 			(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 			(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 			),
+		# 			(
+		# 			(2, -3, -2, 0), (-2, -3, -2, 0), (0, -3, 2, 0),	# posA, posB, posC
+		# 			(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 			(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 			),
+		# 			(
+		# 			(2, -6, -2, 0), (-2, -6, -2, 0), (0, -6, 2, 0),	# posA, posB, posC
+		# 			(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 			(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 			),
+		# 		],
+		# 		dtype=triangles_data_dtype
+		# 	),
+		# 	self.__WINDOW_ID
+		# )
+		# BvhController.AppendBVH(
+		# 	array(
+		# 		[
+		# 			(
+		# 				(1),							# next_left_bvh
+		# 				(2),							# next_right_bvh
+		# 				(-1),							# start_index
+		# 				(-1),							# stop_index
+		# 				(-8, -9, -8, 0), (8, 9, 8, 0),	# volumeA, volumeB
+		# 			),
+		# 			(
+		# 				(3),							# next_left_bvh
+		# 				(4),							# next_right_bvh
+		# 				(-1),							# start_index
+		# 				(-1),							# stop_index
+		# 				(-6, 1, -6, 0), (6, 8, 6, 0),	# volumeA, volumeB
+		# 			),
+		# 			(
+		# 				(5),							# next_left_bvh
+		# 				(6),							# next_right_bvh
+		# 				(-1),							# start_index
+		# 				(-1),							# stop_index
+		# 				(-6, -8, -6, 0), (6, -1, 6, 0),	# volumeA, volumeB
+		# 			),
+
+
+		# 			(
+		# 				(-1),							# next_left_bvh
+		# 				(-1),							# next_right_bvh
+		# 				(0),							# start_index
+		# 				(1),							# stop_index
+		# 				(-4, 5, -4, 0), (4, 7, 4, 0),	# volumeA, volumeB
+		# 			),
+		# 			(
+		# 				(-1),							# next_left_bvh
+		# 				(-1),							# next_right_bvh
+		# 				(1),							# start_index
+		# 				(2),							# stop_index
+		# 				(-4, 2, -4, 0), (4, 4, 4, 0),	# volumeA, volumeB
+		# 			),
+
+
+		# 			(
+		# 				(-1),							# next_left_bvh
+		# 				(-1),							# next_right_bvh
+		# 				(2),							# start_index
+		# 				(3),							# stop_index
+		# 				(-4, -4, -4, 0), (4, -2, 4, 0),	# volumeA, volumeB
+		# 			),
+		# 			(
+		# 				(-1),							# next_left_bvh
+		# 				(-1),							# next_right_bvh
+		# 				(3),							# start_index
+		# 				(4),							# stop_index
+		# 				(-4, -7, -4, 0), (4, -5, 4, 0),	# volumeA, volumeB
+		# 			),
+		# 		],
+		# 		dtype=bvh_data_dtype
+		# 	),
+		# 	self.__WINDOW_ID
+		# )
+
+
+	def LoadBVH(self) -> 'Mesh':
+		if(not self.__THREAD_LOAD_RAM['ready']):
+			self.__TASK_QUEUE.add_task(self.__loadBvh)
+			self.__UPDATE.enabled = True
+		else: self.__loadBvh()
+		return self
 		BvhController.AppendBVH(
 			array(
 				[

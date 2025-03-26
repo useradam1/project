@@ -9,7 +9,7 @@ window_type = Type[ctypes.POINTER(glfw._GLFWwindow)]
 def ApiWindowInitialization() -> bool:
 	if(glfw.init()):
 		glfw.set_error_callback(None)
-		glfw.window_hint(glfw.DOUBLEBUFFER, glfw.FALSE)
+		#glfw.window_hint(glfw.DOUBLEBUFFER, glfw.FALSE)
 		#glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)  # Версия OpenGL 3.x
 		#glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
 		#glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)

@@ -54,18 +54,17 @@ class MainScene(Scene):
 
 	def Load(self) -> None:
 
-		self.mesh = Mesh().LoadBVH()
 
 		self.standart_shader = AssetsEngine.GetAssets()["rtx_shader"]
 
 		self.__MaterialsForRoom()
 
 		self.light_created_material = Material(self.standart_shader, {
-			"diffuse_color": vec4( 	1	 , 	0.1	 , 	0.1	 , 	1	 ),
-			"specular_color": vec4( 	0.1	 , 	1	 , 	1	 , 	1	 ),
+			"diffuse_color": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"specular_color": vec4( 	0.1	 , 	0.5	 , 	1	 , 	1	 ),
 			"emmision": vec3( 	0.5	 , 	0.75	 , 	1	 )*0,
-			"smoothness": vec3( 	0	 , 	1	 , 	0.15	 ),
-			"density": 2
+			"smoothness": vec3( 	1	 , 	1	 , 	0.1	 ),
+			"density": 3
 		})
 		self.light_material = Material(self.standart_shader, {
 			"diffuse_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
@@ -76,14 +75,17 @@ class MainScene(Scene):
 		})
 		self.wall_material = Material(self.standart_shader, {
 			"diffuse_color": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
-			"specular_color": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"specular_color": vec4( 	0.1	 , 	1	 , 	0.1	 , 	0.5	 ),
 			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
-			"smoothness": vec3( 	1	 , 	0	 , 	0	 ),
-			"density": 2.0
+			"smoothness": vec3( 	1	 , 	0.75	 , 	0.2	 ),
+			"density": 1.5
 		})
 
 
 
+		self.mesh = Mesh(
+		).LoadToRamFromPath(rf"{ASSETS_PATH}/Models/Suzanne.obj",separate=False
+		).LoadBVH()
 		pass
 
 
@@ -93,6 +95,24 @@ class MainScene(Scene):
 
 
 	def Start(self) -> None:
+
+		
+		GameObject(
+			name= "light",
+			tag= "Default",
+			transform= Transform(
+				vec3( 0 , -9 , 0 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation().Lx(45)
+			),
+			components= [
+				#RotareScript(),
+				ProceduralMesh(
+					material= self.light_created_material
+				)
+			],
+			childrens=[]
+		)
 
 		GameObject(
 			name= "Player",
@@ -127,7 +147,7 @@ class MainScene(Scene):
 							bottom= -1,
 							top= 1,
 							max_bounce_count= 10,
-							num_samples= 5,
+							num_samples= 3,
 							iso= 1
 						),
 					],
@@ -280,8 +300,8 @@ class MainScene(Scene):
 			name= "light",
 			tag= "Default",
 			transform= Transform(
-				vec3( 0 , 9 , 0 ),
-				vec3( 3 , 0.1 , 3 ),
+				vec3( 0 , 0 , 9 ),
+				vec3( 3 , 3 , 0.1 ),
 				Rotation()
 			),
 			components= [
@@ -297,8 +317,8 @@ class MainScene(Scene):
 			name= "wall",
 			tag= "Default",
 			transform= Transform(
-				vec3( 0 , -7 , 4 ),
-				vec3( 5 , 3 , 0.1 ),
+				vec3( 0 , -8 , -4 ),
+				vec3( 4 , 2 , 0.1 ),
 				Rotation()
 			),
 			components= [
@@ -312,22 +332,6 @@ class MainScene(Scene):
 
 
 
-		GameObject(
-			name= "light",
-			tag= "Default",
-			transform= Transform(
-				vec3( 0 , -5 , 0 ),
-				vec3( 1 , 1 , 1 ),
-				Rotation()
-			),
-			components= [
-				#RotareScript(),
-				ProceduralMesh(
-					material= self.light_material
-				)
-			],
-			childrens=[]
-		)
 
 
 

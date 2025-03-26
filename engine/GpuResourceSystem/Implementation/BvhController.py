@@ -5,10 +5,10 @@ from numpy import dtype, float32, int32, uint32, ndarray, zeros, uint8, array
 
 from ...Math import vec2, vec2_ptr_static
 
-from ...ApiGraphics import CreateSSBOBuffer, UpdateSSBOBuffer, DestroySSBOBuffer
+from ...ApiGraphics import CreateStaticSSBOBuffer, DestroySSBOBuffer
 
-SSBO_INDEX = 44
-SSBO_LIMIT = 40
+SSBO_INDEX = 45
+SSBO_LIMIT = 10000
 
 bvh_data_dtype = dtype([
 	("next_left_bvh", int32, (1)),
@@ -36,7 +36,7 @@ class BvhController:
 		cls.__OBSLATE[window_id] = True
 		cls.__NUMPY_ARRAY_BVH_LINK_FREE_CELLS[window_id] = set(range(SSBO_LIMIT))
 		cls.__NUMPY_ARRAY_BVH_LINK[window_id] = zeros(SSBO_LIMIT, dtype=bvh_data_dtype)
-		cls.__SSBO[window_id] = CreateSSBOBuffer(SSBO_INDEX, zeros(SSBO_LIMIT, dtype=bvh_data_dtype))
+		#cls.__SSBO[window_id] = CreateSSBOBuffer(SSBO_INDEX, zeros(SSBO_LIMIT, dtype=bvh_data_dtype))
 
 
 
@@ -66,8 +66,12 @@ class BvhController:
 		cls.__OBSLATE.pop(window_id, None)
 		cls.__NUMPY_ARRAY_BVH_LINK_FREE_CELLS.pop(window_id, None)
 		cls.__NUMPY_ARRAY_BVH_LINK.pop(window_id, None)
+		
+		if(window_id not in cls.__SSBO): return
 		ssbo = cls.__SSBO.pop(window_id)
 		DestroySSBOBuffer(ssbo)
+
+
 
 
 	@classmethod
@@ -146,6 +150,7 @@ class BvhController:
 	@classmethod
 	def UpdateBuffer(cls, window_id: int) -> None:
 		if(not cls.__OBSLATE[window_id]): return
-		UpdateSSBOBuffer(cls.__SSBO[window_id], cls.__NUMPY_ARRAY_BVH_LINK[window_id])
+		if(window_id in cls.__SSBO): DestroySSBOBuffer(cls.__SSBO[window_id])
+		cls.__SSBO[window_id] = CreateStaticSSBOBuffer(SSBO_INDEX, cls.__NUMPY_ARRAY_BVH_LINK[window_id])
 		cls.__OBSLATE[window_id] = False
-		print(cls.__NUMPY_ARRAY_BVH_LINK[window_id])
+		#print(cls.__NUMPY_ARRAY_BVH_LINK[window_id])

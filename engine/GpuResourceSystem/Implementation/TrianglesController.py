@@ -5,10 +5,10 @@ from numpy import dtype, float32, int32, uint32, ndarray, zeros, uint8, array
 
 from ...Math import vec2, vec2_ptr_static
 
-from ...ApiGraphics import CreateSSBOBuffer, UpdateSSBOBuffer, DestroySSBOBuffer
+from ...ApiGraphics import CreateStaticSSBOBuffer, DestroySSBOBuffer
 
 SSBO_INDEX = 43
-SSBO_LIMIT = 1000
+SSBO_LIMIT = 9000000
 
 triangles_data_dtype = dtype([
 	("posA", float32, (4)),
@@ -21,6 +21,7 @@ triangles_data_dtype = dtype([
 	("uvB", float32, (4)),
 	("uvC", float32, (4)),
 ])
+
 
 
 
@@ -41,40 +42,40 @@ class TrianglesController:
 		cls.__OCCUPIED_INDEXES[window_id] = {}
 		cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id] = 0
 		cls.__NUMPY_ARRAY_TRIANGLES_LINK[window_id] = zeros(SSBO_LIMIT, dtype=triangles_data_dtype)
-		cls.__SSBO[window_id] = CreateSSBOBuffer(SSBO_INDEX, zeros(SSBO_LIMIT, dtype=triangles_data_dtype))
+		#cls.__SSBO[window_id] = CreateSSBOBuffer(SSBO_INDEX, zeros(SSBO_LIMIT, dtype=triangles_data_dtype))
 
 
 
-		triangles = array(
-			[
-				(
-				(2, 6, -2, 0), (-2, 6, -2, 0), (0, 6, 2, 0),	# posA, posB, posC
-				(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
-				(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
-				),
-				(
-				(2, 3, -2, 0), (-2, 3, -2, 0), (0, 3, 2, 0),	# posA, posB, posC
-				(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
-				(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
-				),
-				(
-				(2, -3, -2, 0), (-2, -3, -2, 0), (0, -3, 2, 0),	# posA, posB, posC
-				(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
-				(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
-				),
-				(
-				(2, -6, -2, 0), (-2, -6, -2, 0), (0, -6, 2, 0),	# posA, posB, posC
-				(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
-				(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
-				),
-			],
-			dtype=triangles_data_dtype
-		)
+		# triangles = array(
+		# 	[
+		# 		(
+		# 		(2, 6, -2, 0), (-2, 6, -2, 0), (0, 6, 2, 0),	# posA, posB, posC
+		# 		(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 		(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 		),
+		# 		(
+		# 		(2, 3, -2, 0), (-2, 3, -2, 0), (0, 3, 2, 0),	# posA, posB, posC
+		# 		(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 		(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 		),
+		# 		(
+		# 		(2, -3, -2, 0), (-2, -3, -2, 0), (0, -3, 2, 0),	# posA, posB, posC
+		# 		(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 		(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 		),
+		# 		(
+		# 		(2, -6, -2, 0), (-2, -6, -2, 0), (0, -6, 2, 0),	# posA, posB, posC
+		# 		(0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),		# normalA, normalB, normalC
+		# 		(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)		# uvA, uvB, uvC
+		# 		),
+		# 	],
+		# 	dtype=triangles_data_dtype
+		# )
 
-		start_index = cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id]
-		stop_index = start_index + len(triangles)
-		cls.__NUMPY_ARRAY_TRIANGLES_LINK[window_id][start_index : stop_index] = triangles
-		cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id] = stop_index
+		# start_index = cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id]
+		# stop_index = start_index + len(triangles)
+		# cls.__NUMPY_ARRAY_TRIANGLES_LINK[window_id][start_index : stop_index] = triangles
+		# cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id] = stop_index
 
 
 	@classmethod
@@ -89,29 +90,26 @@ class TrianglesController:
 		cls.__OCCUPIED_INDEXES.pop(window_id, None)
 		cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX.pop(window_id, None)
 		cls.__NUMPY_ARRAY_TRIANGLES_LINK.pop(window_id, None)
+
+		if(window_id not in cls.__SSBO): return
 		ssbo = cls.__SSBO.pop(window_id)
 		DestroySSBOBuffer(ssbo)
 
 
 	@classmethod
-	def AppendTriangles(cls, mesh_geometry_procedure_id: int, triangles: ndarray[Tuple[int,int,int],dtype[float32]], window_id: int) -> Optional[vec2_ptr_static]:
+	def AppendTriangles(cls,
+			mesh_geometry_procedure_id: int, 
+			triangles: ndarray, 
+			window_id: int
+		) -> Optional[vec2_ptr_static]:
+
 		start_index = cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id]
 		stop_index = start_index + len(triangles)
-		if(stop_index > SSBO_LIMIT): return None
-
-		vector = vec2(start_index, stop_index)
-		occupied_indexes = cls.__OCCUPIED_INDEXES[window_id]
-		if(mesh_geometry_procedure_id not in occupied_indexes): occupied_indexes[mesh_geometry_procedure_id] = set([vector])
-		else: occupied_indexes[mesh_geometry_procedure_id].add(vector)
-		cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id] = stop_index
-
-
 		cls.__NUMPY_ARRAY_TRIANGLES_LINK[window_id][start_index : stop_index] = triangles
+		cls.__NUMPY_ARRAY_TRIANGLES_LINK_LAST_UNOCCUPIED_INDEX[window_id] = stop_index
+		cls.__OBSLATE[window_id] = True
 
 
-		result = vec2_ptr_static()
-		result.LinkVector(vector)
-		return result
 
 
 	@classmethod
@@ -123,5 +121,6 @@ class TrianglesController:
 	@classmethod
 	def UpdateBuffer(cls, window_id: int) -> None:
 		if(not cls.__OBSLATE[window_id]): return
-		UpdateSSBOBuffer(cls.__SSBO[window_id], cls.__NUMPY_ARRAY_TRIANGLES_LINK[window_id])
+		if(window_id in cls.__SSBO): DestroySSBOBuffer(cls.__SSBO[window_id])
+		cls.__SSBO[window_id] = CreateStaticSSBOBuffer(SSBO_INDEX, cls.__NUMPY_ARRAY_TRIANGLES_LINK[window_id])
 		cls.__OBSLATE[window_id] = False
