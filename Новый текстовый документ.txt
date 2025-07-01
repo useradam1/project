@@ -1,0 +1,658 @@
+from engine import *
+from ..settings import ASSETS_PATH
+
+from ..Assets.Scripts.CameraScript import CameraScript
+from ..Assets.Scripts.RenderScript import RenderScript
+from ..Assets.Scripts.RotateCube import RotateCube
+
+
+class MainScene(Scene):
+
+	def __MaterialsForRoom(self) -> None:
+		self.flor = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	0.75 , 	0.75 , 	0.75	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.0,
+			"scatter_depth": 0.0
+		})
+		self.cell = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.0,
+			"scatter_depth": 0.0
+		})
+		self.left = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	1 , 	0.25	 , 	0.25	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.0,
+			"scatter_depth": 0.0
+		})
+		self.right = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	0.25	 , 	0.25	 , 	1	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.0,
+			"scatter_depth": 0.0
+		})
+		self.forward = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.0,
+			"scatter_depth": 0.0
+		})
+		self.back = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	0.25	 , 	1	 , 	0.25	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.0,
+			"scatter_depth": 0.0
+		})
+
+
+	def Load(self) -> None:
+
+
+		self.standart_shader = AssetsEngine.GetAssets()["rtx_shader"]
+
+		self.__MaterialsForRoom()
+
+		self.light_sky_material = Material(self.standart_shader, {
+			"emmision": vec3( 	0.5	 , 	0.7	 , 	1	 )*1000,
+			#"emmision": vec3( 	1	 , 	0.1	 , 	0.1	 ),
+
+			"outside_color1": vec4( 	0.5	 , 	0.7	 , 	1	 , 	0	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 1.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0.5	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0.98	 , 	0	 , 	0	 ),
+
+			"density": 1,
+			"scatter_depth": 0
+		})
+		self.sun_material = Material(self.standart_shader, {
+			"emmision": vec3( 	1	 , 	0.7	 , 	0.5	 )*100_000,
+
+			"outside_color1": vec4( 	1	 , 	0.7	 , 	0.5	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.0,
+			"scatter_depth": 0.0
+		})
+		self.light_material = Material(self.standart_shader, {
+			"emmision": vec3( 	1	 , 	1	 , 	1	 )*2500,
+
+			"outside_color1": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1,
+			"scatter_depth": 0.0
+		})
+		self.metall_material = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0.0	 , 	0.9	 , 	0.1	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.5,
+			"scatter_depth": 0.0
+		})
+
+		self.mirror_material = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	1	 , 	1	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	1 , 	1	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0	 , 	0	 , 	0	 ),
+
+			"density": 1.5,
+			"scatter_depth": 0.0
+		})
+		self.yellow_material = Material(self.standart_shader, {
+			"emmision": vec3( 	1	 , 		1	 , 	1	 )*0,
+
+			"outside_color1": vec4( 	1	 , 	1	 , 	0.1	 , 	0.5	 ),
+			"outside_color2": vec4( 	1	 , 	1	 ,	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0.95	 ,  0.05	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	0 , 	0	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0.5	 , 	0	 , 	0	 ),
+
+			"density": 1,
+			"scatter_depth": 0.0
+		})
+		self.red_material = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 ,	1	 , 	0	 )*10,
+
+			"outside_color1": vec4( 	1	 , 	0.1	 , 	0.1	 , 	1	 ),
+			"outside_color2": vec4( 	0.1	 , 	0.1	 ,	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0	 , 	0.95	 ,  0.05	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	1 , 	0 , 	0	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0.5	 , 	0	 , 	0	 ),
+
+			"density": 1,
+			"scatter_depth": 0.0
+		})
+		self.glass_material = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0.998	 , 	0	 , 	0.1	 ),
+
+			"inside_transition_prob": 1.0,
+
+			"inside_color1": vec4( 	0.5 , 	1 , 	0.8	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0.998	 , 	0	 , 	0	 ),
+
+			"density": 1.5,
+			"scatter_depth": 0.0
+		})
+		self.water_material = Material(self.standart_shader, {
+			"emmision": vec3( 	0	 , 	0	 , 	0	 ),
+
+			"outside_color1": vec4( 	0.8 , 	1 , 	0.9	 , 	0	 ),
+			"outside_color2": vec4( 	1	 , 	1	 , 	1	 , 	1	 ),
+			"outside_smoothness": vec4( 	0.998	 , 	1	 , 	0	 ),
+
+			"inside_transition_prob": 0.0,
+
+			"inside_color1": vec4( 	0.5 , 	1 , 	0.7	 , 	0	 ),
+			"inside_color2": vec4( 	1	 , 	1	 , 	1	 , 	0	 ),
+			"inside_smoothness": vec4( 	0.998	 , 	0	 , 	0	 ),
+
+			"density": 1.333,
+			"scatter_depth": 0.5
+		})
+
+		
+
+		
+
+
+		self.mesh1 = Mesh(
+		).LoadToRamFromPath(rf"{ASSETS_PATH}/Models/cow.obj",separate=True
+		).LoadBVH()
+		pass
+
+
+
+
+
+
+
+	def Start(self) -> None:    # Создаём векторы в последовательной памяти
+
+
+
+		# GameObject(
+		# 	name= "tree",
+		# 	tag= "Default",
+		# 	transform= Transform(
+		# 		vec3( 0 , 0 , 1 ),
+		# 		vec3( 1 , 1 , 1 ),
+		# 		Rotation()
+		# 	),
+		# 	components= [
+		# 		ProceduralMesh(
+		# 			mesh= self.mesh1,
+		# 			material= self.sun_material
+		# 		),
+		# 	],
+		# 	childrens=[]
+		# )
+		
+
+
+		GameObject(
+			name= "Player",
+			tag= "Default",
+			transform= Transform(
+				vec3( 0 , 0 , -9 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation()
+			),
+			components= [
+			],
+			childrens=[
+				GameObject(
+					name= "MainCamera",
+					tag= "Default",
+					transform= Transform(
+						vec3( 0 , 0 , 0 ),
+						vec3( 1 , 1 , 1 ),
+						Rotation()
+					),
+					components= [
+						Camera(
+							mod= "perspective",
+							fov= 60,
+							near= 0.1,
+							far= 1,
+							left= -1,
+							right= 1,
+							bottom= -1,
+							top= 1,
+							max_bounce_count= 6,
+							num_samples= 1,
+							iso= 1/300
+						),
+						RenderScript(ASSETS_PATH),
+						CameraScript(
+							light_material= self.light_material
+						),
+					],
+					childrens=[
+					]
+				),
+			]
+		)
+
+
+		#return
+
+
+
+
+		GameObject(
+			name= "room",
+			tag= "Default",
+			transform= Transform(
+				vec3( 0 , 0 , 0 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation()
+			),
+			components= [
+				#RotareScript()
+			],
+			childrens=[
+				GameObject(
+					name= "cell",
+					tag= "Default",
+					transform= Transform(
+						vec3( 0 , 10 , 0 ),
+						vec3( 10 , 1 , 10 ),
+						Rotation().Ly(0).Lx(0)
+					),
+					components= [
+						Procedural(
+							material= self.cell,
+							type_procedural_object= "Plane"
+						)
+					],
+					childrens=[]
+				),
+				GameObject(
+					name= "flor",
+					tag= "Default",
+					transform= Transform(
+						vec3( 0 , -10 , 0 ),
+						vec3( 10 , 1 , 10 ),
+						Rotation().Ly(0).Lx(0)
+					),
+					components= [
+						Procedural(
+							material= self.flor,
+							type_procedural_object= "Plane"
+						)
+					],
+					childrens=[]
+				),
+				GameObject(
+					name= "forward",
+					tag= "Default",
+					transform= Transform(
+						vec3( 0 , 0 , 10 ),
+						vec3( 10 , 1 , 10 ),
+						Rotation().Ly(0).Lx(90)
+					),
+					components= [
+						Procedural(
+							material= self.forward,
+							type_procedural_object= "Plane"
+						)
+					],
+					childrens=[]
+				),
+				GameObject(
+					name= "back",
+					tag= "Default",
+					transform= Transform(
+						vec3( 0 , 0 , -10 ),
+						vec3( 10 , 1 , 10 ),
+						Rotation().Ly(0).Lx(90)
+					),
+					components= [
+						Procedural(
+							material= self.back,
+							type_procedural_object= "Plane"
+						)
+					],
+					childrens=[]
+				),
+				GameObject(
+					name= "left",
+					tag= "Default",
+					transform= Transform(
+						vec3( -10 , 0 , 0 ),
+						vec3( 10 , 1 , 10 ),
+						Rotation().Ly(90).Lx(90)
+					),
+					components= [
+						Procedural(
+							material= self.left,
+							type_procedural_object= "Plane"
+						)
+					],
+					childrens=[]
+				),
+				GameObject(
+					name= "right",
+					tag= "Default",
+					transform= Transform(
+						vec3( 10 , 0 , 0 ),
+						vec3( 10 , 1 , 10 ),
+						Rotation().Ly(90).Lx(90)
+					),
+					components= [
+						Procedural(
+							material= self.right,
+							type_procedural_object= "Plane"
+						)
+					],
+					childrens=[]
+				),
+			]
+		)
+
+
+
+
+		GameObject(
+			name= "light",
+			tag= "Default",
+			transform= Transform(
+				vec3( 0 , 0 , 9 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation()
+			),
+			components= [
+				Procedural(
+					material= self.light_material,
+					type_procedural_object= "Cube"
+				)
+			],
+			childrens=[]
+		)
+		GameObject(
+			name= "plastic sphere",
+			tag= "Default",
+			transform= Transform(
+				vec3( 0 , -9 , 2 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation()
+			),
+			components= [
+				Procedural(
+					material= self.yellow_material,
+					type_procedural_object= "Sphere"
+				),
+				#RotareScript()
+			],
+			childrens=[]
+		)
+		GameObject(
+			name= "matallic sphere",
+			tag= "Default",
+			transform= Transform(
+				vec3( 2 , -9 , 0 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation().Ly(25)
+			),
+			components= [
+				Procedural(
+					material= self.metall_material,
+					type_procedural_object= "Sphere"
+				),
+				#RotareScript()
+			],
+			childrens=[]
+		)
+		GameObject(
+			name= "glass sphere",
+			tag= "Default",
+			transform= Transform(
+				vec3( -2 , -9 , -1 ),
+				vec3( 1 , 1 , 1 ),
+				Rotation()
+			),
+			components= [
+				Procedural(
+					material= self.glass_material,
+					type_procedural_object= "Sphere"
+				),
+				#RotareScript()
+			],
+			childrens=[]
+		)
+
+
+		# GameObject(
+		# 	name= "island",
+		# 	tag= "Default",
+		# 	transform= Transform(
+		# 		vec3( -20 , -20 , -50 ),
+		# 		vec3( 1 , 1 , 1 )*20,
+		# 		Rotation().Ly(45).Gx(45)
+		# 	),
+		# 	components= [
+		# 		Procedural(
+		# 			material= self.back,
+		# 			type_procedural_object= "Cube"
+		# 		),
+		# 		#RotareScript()
+		# 	],
+		# 	childrens=[]
+		# )
+		# GameObject(
+		# 	name= "block",
+		# 	tag= "Default",
+		# 	transform= Transform(
+		# 		vec3( 50 , -20 , -100 ),
+		# 		vec3( 1 , 2 , 1 )*20,
+		# 		Rotation().Ly(74).Gx(15)
+		# 	),
+		# 	components= [
+		# 		Procedural(
+		# 			material= self.flor,
+		# 			type_procedural_object= "Cube"
+		# 		),
+		# 		#RotareScript()
+		# 	],
+		# 	childrens=[]
+		# )
+
+		# erth_size = 6371
+		
+		# GameObject(
+		# 	name= "erth",
+		# 	tag= "Default",
+		# 	transform= Transform(
+		# 		vec3( 0 , -erth_size-15 , 0 ),
+		# 		vec3( 1 , 1 , 1 )*erth_size,
+		# 		Rotation()
+		# 	),
+		# 	components= [
+		# 		Procedural(
+		# 			material= self.water_material,
+		# 			type_procedural_object= "Sphere"
+		# 		),
+		# 	],
+		# 	childrens=[
+		# 		GameObject(
+		# 			name= "atmosphere",
+		# 			tag= "Default",
+		# 			transform= Transform(
+		# 				vec3( 0 , 0 , 0 ),
+		# 				vec3( 1 , 1 , 1 )*((erth_size+100)/erth_size),
+		# 				Rotation()
+		# 			),
+		# 			components= [
+		# 				Procedural(
+		# 					material= self.light_sky_material,
+		# 					type_procedural_object= "Sphere"
+		# 				),
+		# 			],
+		# 			childrens=[
+		# 			]
+		# 		),
+		# 		GameObject(
+		# 			name= "contenent",
+		# 			tag= "Default",
+		# 			transform= Transform(
+		# 				vec3( 0 , 0 , 0 ),
+		# 				vec3( 1 , 1 , 1 )-0.003,
+		# 				Rotation()
+		# 			),
+		# 			components= [
+		# 				Procedural(
+		# 					material= self.flor,
+		# 					type_procedural_object= "Sphere"
+		# 				),
+		# 			],
+		# 			childrens=[
+		# 			]
+		# 		),
+		# 		GameObject(
+		# 			name= "dist",
+		# 			tag= "Default",
+		# 			transform= Transform(
+		# 				vec3( 0 , 0 , 0 ),
+		# 				vec3( 1 , 1 , 1 ),
+		# 				Rotation().Ly(15).Lx(70)
+		# 			),
+		# 			components= [
+		# 			],
+		# 			childrens=[
+		# 				GameObject(
+		# 					name= "sun",
+		# 					tag= "Default",
+		# 					transform= Transform(
+		# 						vec3( 0 , 14957987 , 0 ),
+		# 						vec3( 1 , 1 , 1 )*696340,
+		# 						Rotation()
+		# 					),
+		# 					components= [
+		# 						Procedural(
+		# 							material= self.sun_material,
+		# 							type_procedural_object= "Sphere"
+		# 						),
+		# 					],
+		# 					childrens=[
+		# 					]
+		# 				)
+		# 			]
+		# 		)
+		# 	]
+		# )
+
+
+
+	def Unload(self) -> None:
+		pass

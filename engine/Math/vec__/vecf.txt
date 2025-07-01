@@ -1,0 +1,199 @@
+1. Тригонометрия и Clamp
+cython
+Копировать
+Редактировать
+cdef inline float funsin(float value):    return sinf(value)
+cdef inline float funcos(float value):    return cosf(value)
+cdef inline float funtan(float value):    return tanf(value)
+
+cdef inline int funclamp_int(int value, int min_value, int max_value):
+    if value < min_value: return min_value
+    elif value > max_value: return max_value
+    return value
+2. Векторы (vec2, vec3, vec4): Базовые операции
+Сложение / Вычитание
+
+cython
+Копировать
+Редактировать
+cdef inline void vec2_add_vec2(float* target[2], float* valueA[2], float* valueB[2]):
+    for i in range(2): target[i][0] = valueA[i][0] + valueB[i][0]
+
+cdef inline void vec2_sub_vec2(float* target[2], float* valueA[2], float* valueB[2]):
+    for i in range(2): target[i][0] = valueA[i][0] - valueB[i][0]
+Поэлементное умножение / Деление
+
+c
+Копировать
+Редактировать
+cdef inline void vec2_mul_vec2(float* target[2], float* valueA[2], float* valueB[2]):
+    for i in range(2): target[i][0] = valueA[i][0] * valueB[i][0]
+
+cdef inline void vec2_truediv_vec2(float* target[2], float* valueA[2], float* valueB[2]):
+    for i in range(2): target[i][0] = valueA[i][0] / valueB[i][0]
+Операции со скаляром
+
+cython
+Копировать
+Редактировать
+cdef inline void vec2_add_float(float* target[2], float* valueA[2], float valueB):
+    for i in range(2): target[i][0] = valueA[i][0] + valueB
+cdef inline void vec2_mul_float(float* target[2], float* valueA[2], float valueB):
+    for i in range(2): target[i][0] = valueA[i][0] * valueB
+Сравнения
+
+cython
+Копировать
+Редактировать
+cdef inline bint vec2_lt_vec2(float* valueA[2], float* valueB[2]):
+    for i in range(2): if valueA[i][0] >= valueB[i][0]: return c_false_bool
+    return c_true_bool
+
+cdef inline bint vec2_gt_vec2(float* valueA[2], float* valueB[2]):
+    for i in range(2): if valueA[i][0] <= valueB[i][0]: return c_false_bool
+    return c_true_bool
+
+cdef inline bint vec2_eq_vec2(float* valueA[2], float* valueB[2]):
+    for i in range(2): if valueA[i][0] != valueB[i][0]: return c_false_bool
+    return c_true_bool
+Нормализация, длина, скалярное произведение
+
+c
+Копировать
+Редактировать
+cdef inline float vec2_magnitude(float* vector[2], float* magnitude):
+    if magnitude[0] == c_neg_one_float:
+        magnitude[0] = c_zero_float
+        for i in range(2): magnitude[0] += vector[i][0] * vector[i][0]
+        magnitude[0] = sqrtf(magnitude[0])
+    return magnitude[0]
+
+cdef inline void vec2_normalize_in_place(float* vector[2], float* magnitude):
+    cdef float mag = vec2_magnitude(vector, magnitude)
+    if mag == c_zero_float: return
+    cdef float inv = c_one_float / mag
+    for i in range(2): vector[i][0] *= inv
+    magnitude[0] = c_one_float
+
+cdef inline float vec2_dot_product_vec2(float* valueA[2], float* valueB[2]):
+    cdef float result = c_zero_float
+    for i in range(2): result += valueA[i][0] * valueB[i][0]
+    return result
+3. Векторы 3D (vec3): Дополнительно — Cross Product
+cython
+Копировать
+Редактировать
+cdef inline void vec3_cross_product_from(float* target[3], float* valueA[3], float* valueB[3]):
+    target[0][0] = valueA[1][0] * valueB[2][0] - valueA[2][0] * valueB[1][0]
+    target[1][0] = valueA[2][0] * valueB[0][0] - valueA[0][0] * valueB[2][0]
+    target[2][0] = valueA[0][0] * valueB[1][0] - valueA[1][0] * valueB[0][0]
+4. Матрицы (mat2, mat3, mat4): Арифметика и специальные методы
+Детерминант, инверсия
+
+cython
+Копировать
+Редактировать
+cdef inline float mat2_determinant(float* matrix[4], float* determinant):
+    if determinant[0] == c_neg_one_float:
+        determinant[0] = (matrix[0][0] * matrix[3][0] - matrix[1][0] * matrix[2][0])
+    return determinant[0]
+
+cdef inline void mat2_inverse_in_place(float* matrix[4], float* determinant):
+    cdef float det = mat2_determinant(matrix, determinant)
+    if det == c_zero_float: return
+    cdef float inv_det = c_one_float / det
+    cdef float[4] result
+    result[0] = matrix[3][0] * inv_det
+    result[1] = -matrix[1][0] * inv_det
+    result[2] = -matrix[2][0] * inv_det
+    result[3] = matrix[0][0] * inv_det
+    for i in range(4): matrix[i][0] = result[i]
+    determinant[0] = inv_det
+Транспонирование
+
+cython
+Копировать
+Редактировать
+cdef inline void mat2_transpose_in_place(float* matrix[4]):
+    cdef int i, j
+    for i in range(2):
+        for j in range(i+1, 2):
+            matrix[i*2 + j][0], matrix[j*2 + i][0] = matrix[j*2 + i][0], matrix[i*2 + j][0]
+Умножение матрицы на вектор
+
+cython
+Копировать
+Редактировать
+cdef inline void mat3_matmul_vec3(float* target_vector[3], float* matrix[9], float* vector[3]):
+    cdef int i = 0
+    cdef int j = 0
+    cdef float[3] result
+    for i in range(3): result[i] = c_zero_float
+    for i in range(3):
+        for j in range(3): result[i] += matrix[i * 3 + j][0] * vector[j][0]
+    for i in range(3): target_vector[i][0] = result[i]
+5. Вращение (3D):
+cython
+Копировать
+Редактировать
+cdef inline void mat3_rotate(float* target[9], float angle, float x, float y, float z):
+    cdef float a = radians(angle)
+    cdef float c = cosf(a)
+    cdef float s = sinf(a)
+    cdef float t = c_one_float - c
+    cdef float tx = t * x
+    cdef float ty = t * y
+
+    cdef float matrix[9]
+    matrix[0] = tx * x + c
+    matrix[1] = tx * y - s * z
+    matrix[2] = tx * z + s * y
+    matrix[3] = tx * y + s * z
+    matrix[4] = ty * y + c
+    matrix[5] = ty * z - s * x
+    matrix[6] = tx * z - s * y
+    matrix[7] = ty * z + s * x
+    matrix[8] = t * z * z + c
+    # Перемножение с исходной матрицей (см. полный алгоритм выше)
+6. Преобразования/Трансформы (Матрица-матрица, матрица-вектор):
+Матрица на матрицу
+
+c
+Копировать
+Редактировать
+cdef inline void mat3_imatmul_mat3(float* target[9], float* source[9]):
+    cdef float[9] result
+    result[0] = target[0][0] * source[0][0] + target[1][0] * source[3][0] + target[2][0] * source[6][0]
+    result[1] = target[0][0] * source[1][0] + target[1][0] * source[4][0] + target[2][0] * source[7][0]
+    # и т.д. по схеме стандартного матричного умножения
+    for i in range(9): target[i][0] = result[i]
+7. Быстрые (inline) проверки и преобразования
+abs, neg (модуль, отрицание):
+
+c
+Копировать
+Редактировать
+cdef inline void vec2_abs_from(float* target[2], float* source[2]):
+    for i in range(2): target[i][0] = fabsf(source[i][0])
+
+cdef inline void vec2_neg_from(float* target[2], float* source[2]):
+    for i in range(2): target[i][0] = -source[i][0]
+mod, pow, floor, fmod (остаток, степень, округление):
+
+cython
+Копировать
+Редактировать
+cdef inline void vec2_mod_vec2(float* target[2], float* valueA[2], float* valueB[2]):
+    for i in range(2): target[i][0] = fmodf(valueA[i][0], valueB[i][0])
+cdef inline void vec2_pow_vec2(float* target[2], float* valueA[2], float* valueB[2]):
+    for i in range(2): target[i][0] = powf(valueA[i][0], valueB[i][0])
+8. Общее
+Все векторы и матрицы поддерживают:
+
+арифметику (+, -, *, /, % и т.д.)
+
+сравнения (<, >, ==, !=)
+
+нормализацию, длину
+
+преобразования: транспонирование, инверсию, вращение, преобразование координат
